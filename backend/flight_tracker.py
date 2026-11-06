@@ -23,8 +23,10 @@ class FlightTracker:
             self.flights[hex_code] = {
                 "hex": hex_code,
                 "callsign": hex_code,
-                "lat": 0.0,
-                "lon": 0.0,
+                # None until a position message arrives, so the frontend
+                # doesn't plot the plane at 0,0 (it skips non-numeric coords)
+                "lat": None,
+                "lon": None,
                 "altitude": 0,
                 "speed": 0,
                 "heading": 0,

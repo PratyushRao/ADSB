@@ -242,6 +242,9 @@
             <span class="text-[9px] font-mono font-medium" style="color: ${altColor}">
               ${formatAltitude(plane.altitude)} ${vIndicator}
             </span>
+            ${isSelected && plane.route
+              ? `<span class="text-[9px] font-mono text-cyan-400">${plane.route.origin.iata || plane.route.origin.icao || '?'}→${plane.route.destination.iata || plane.route.destination.icao || '?'}</span>`
+              : ''}
           </div>
         </div>
       `,

@@ -8,6 +8,19 @@
   }
 
   let { plane, onClose }: Props = $props();
+
+  const checkLabel = {
+    plausible: '✓ matches position',
+    'off-route': '⚠ off route',
+    reverse: '⚠ opposite direction',
+    unverified: 'unverified',
+  } as const;
+  const checkStyle = {
+    plausible: 'text-emerald-400 bg-emerald-950/60 border-emerald-800/60',
+    'off-route': 'text-amber-400 bg-amber-950/60 border-amber-800/60',
+    reverse: 'text-amber-400 bg-amber-950/60 border-amber-800/60',
+    unverified: 'text-slate-400 bg-slate-900 border-slate-700',
+  } as const;
 </script>
 
 {#if plane}
@@ -44,6 +57,35 @@
         </svg>
       </button>
     </div>
+
+    <!-- Route (looked up from the callsign, cross-checked against the live position) -->
+    {#if plane.route}
+      {@const r = plane.route}
+      <div class="mb-3 p-3 rounded-xl bg-slate-950/70 border border-slate-800 font-mono">
+        <div class="flex items-center justify-between text-[10px] uppercase text-slate-500 mb-2">
+          <span>Route · {r.flight}{r.airline ? ` · ${r.airline}` : ''}</span>
+          <span class="px-2 py-0.5 rounded-full border normal-case {checkStyle[r.check]}" title={r.checkDetail}>
+            {checkLabel[r.check]}
+          </span>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="flex-1 min-w-0">
+            <div class="text-xl font-bold text-white">{r.origin.iata || r.origin.icao || '???'}</div>
+            <div class="text-[10px] text-slate-400 truncate" title={r.origin.name ?? ''}>{r.origin.city || r.origin.name || ''}</div>
+          </div>
+          <div class="text-cyan-400 text-lg">✈ →</div>
+          <div class="flex-1 min-w-0 text-right">
+            <div class="text-xl font-bold text-white">{r.destination.iata || r.destination.icao || '???'}</div>
+            <div class="text-[10px] text-slate-400 truncate" title={r.destination.name ?? ''}>{r.destination.city || r.destination.name || ''}</div>
+          </div>
+        </div>
+        <div class="mt-2 text-[10px] text-slate-500">{r.checkDetail} · route data: {r.source}</div>
+      </div>
+    {:else if plane.callsign !== plane.hex}
+      <div class="mb-3 p-2 rounded-lg bg-slate-950/40 border border-slate-800/80 text-[11px] font-mono text-slate-500">
+        Route: not found for callsign {plane.callsign}
+      </div>
+    {/if}
 
     <!-- Detailed Flight Data Grid -->
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-3 font-mono text-xs">
@@ -88,14 +130,7 @@
       </div>
 
       <div class="flex gap-2">
-        <a
-          href="https://www.flightradar24.com/{plane.callsign}"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="text-cyan-400 hover:text-cyan-300 hover:underline flex items-center gap-1"
-        >
-          Flightradar24 ↗
-        </a>
+        {#if plane.category}<span>Cat: <strong class="text-slate-200">{plane.category}</strong></span>{/if}
       </div>
     </div>
   </div>

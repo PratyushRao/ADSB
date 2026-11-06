@@ -20,3 +20,13 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 .idea/
+
+# SDR / GNU Radio
+*.bin
+*.cf32
+*.cu8
+backend/grc/adsb_rx.py
+backend/grc/*_epy_block_*.py
+
+# Local-only documents (not pushed)
+*.pdf

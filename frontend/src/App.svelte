@@ -37,9 +37,28 @@
   let simTimer: ReturnType<typeof setInterval> | null = null;
 
   onMount(() => {
-    // Start with simulation active for immediate live visual preview
-    startSimulation();
+    // Connect to the local backend straight away (demo flights are still
+    // available from Settings -> Simulation).
+    startFeedConnection(feedStatus.endpointUrl, feedStatus.pollingIntervalMs);
   });
+
+  /** Ask the backend where the antenna is (python main.py --lat .. --lon ..). */
+  async function fetchReceiverFromBackend(feedUrl: string) {
+    try {
+      const u = new URL(feedUrl);
+      u.protocol = u.protocol === 'wss:' ? 'https:' : u.protocol === 'ws:' ? 'http:' : u.protocol;
+      u.pathname = '/api/receiver';
+      u.search = '';
+      const res = await fetch(u.toString(), { headers: { Accept: 'application/json' } });
+      if (!res.ok) return;
+      const rx = await res.json();
+      if (rx && typeof rx.lat === 'number' && typeof rx.lon === 'number') {
+        handleUpdateReceiver(rx as ReceiverLocation);
+      }
+    } catch {
+      // Backend without /api/receiver (or a third-party feed): keep current location
+    }
+  }
 
   onDestroy(() => {
     stopTimers();
@@ -84,11 +103,31 @@
     }, 1000);
   }
 
+  /**
+   * Apply a full snapshot from a live backend. The backend's list is
+   * authoritative: aircraft missing from it (purged as stale) are dropped,
+   * while those still present keep their accumulated trail.
+   */
+  function applyLiveSnapshot(data: unknown): Aircraft[] {
+    const before = Date.now();
+    const updated = parseAdsbPayload(data, aircraftMap, receiver).filter(
+      (a) => a.lastUpdated >= before
+    );
+    aircraftList = updated;
+    aircraftMap.clear();
+    aircraftList.forEach((a) => aircraftMap.set(a.hex, a));
+    return updated;
+  }
+
   function startFeedConnection(url: string, intervalMs: number) {
     stopTimers();
+    // Drop simulation/previous-feed aircraft so they don't linger
+    aircraftMap.clear();
+    aircraftList = [];
     feedStatus.endpointUrl = url.trim();
     feedStatus.pollingIntervalMs = intervalMs;
     feedStatus.error = null;
+    fetchReceiverFromBackend(feedStatus.endpointUrl);
 
     // Check if WebSocket stream
     if (feedStatus.endpointUrl.startsWith('ws://') || feedStatus.endpointUrl.startsWith('wss://')) {
@@ -103,11 +142,7 @@
         };
         socket.onmessage = (event) => {
           try {
-            const data = JSON.parse(event.data);
-            const updated = parseAdsbPayload(data, aircraftMap, receiver);
-            aircraftList = updated;
-            aircraftMap.clear();
-            aircraftList.forEach((a) => aircraftMap.set(a.hex, a));
+            const updated = applyLiveSnapshot(JSON.parse(event.data));
 
             feedStatus.lastFetchTime = Date.now();
             feedStatus.lastMessageCount = updated.length;
@@ -122,7 +157,7 @@
         };
         socket.onerror = () => {
           feedStatus.connected = false;
-          feedStatus.error = 'WebSocket connection error';
+          feedStatus.error = `Can't reach backend at ${feedStatus.endpointUrl} (is python main.py running?)`;
         };
         socket.onclose = () => {
           feedStatus.connected = false;
@@ -146,11 +181,7 @@
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
-        const data = await response.json();
-        const updated = parseAdsbPayload(data, aircraftMap, receiver);
-        aircraftList = updated;
-        aircraftMap.clear();
-        aircraftList.forEach((a) => aircraftMap.set(a.hex, a));
+        const updated = applyLiveSnapshot(await response.json());
 
         feedStatus.connected = true;
         feedStatus.lastFetchTime = Date.now();
@@ -293,7 +324,7 @@
     {/if}
 
     <!-- Backend Connection Warning Banner -->
-    {#if feedStatus.error && feedStatus.mode === 'poll'}
+    {#if feedStatus.error && (feedStatus.mode === 'poll' || feedStatus.mode === 'websocket')}
       <div class="absolute top-4 left-1/2 -translate-x-1/2 z-20 px-4 py-2 rounded-xl bg-rose-950/90 border border-rose-700/80 text-rose-200 text-xs font-mono shadow-2xl backdrop-blur-md flex items-center gap-2">
         <span>⚠️</span>
         <span>{feedStatus.error}</span>

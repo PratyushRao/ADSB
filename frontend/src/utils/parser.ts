@@ -128,6 +128,7 @@ export function parseAdsbPayload(
       distanceNm,
       bearingDeg,
       trail,
+      route: item.route && typeof item.route === 'object' ? item.route : undefined,
     };
 
     updatedMap.set(hex, aircraft);

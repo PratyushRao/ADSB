@@ -15,6 +15,28 @@ export interface Aircraft {
   distanceNm?: number; // distance from receiver in nautical miles
   bearingDeg?: number; // bearing from receiver
   trail: [number, number][]; // [lat, lon] history for flight path
+  route?: FlightRoute; // origin/destination looked up from the callsign (backend)
+}
+
+export interface RouteAirport {
+  iata?: string | null;
+  icao?: string | null;
+  name?: string | null;
+  city?: string | null;
+  country?: string | null;
+  lat?: number | null;
+  lon?: number | null;
+}
+
+export interface FlightRoute {
+  flight: string; // IATA flight number, e.g. 6E5203 (callsign IGO5203)
+  airline?: string | null;
+  origin: RouteAirport;
+  destination: RouteAirport;
+  source: string; // route database used
+  // Route cross-checked against the live decoded position/track
+  check: 'plausible' | 'off-route' | 'reverse' | 'unverified';
+  checkDetail: string;
 }
 
 export interface ReceiverLocation {

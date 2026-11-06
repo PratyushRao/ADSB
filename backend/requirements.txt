@@ -1,3 +1,7 @@
 fastapi>=0.115.0
 uvicorn[standard]>=0.32.0
 websockets>=13.0
+pyModeS>=3.6
+numpy>=1.26
+# GNU Radio (with gr-soapy) is NOT pip-installable: install it from your OS
+# packages and create the venv with --system-site-packages so it is visible.

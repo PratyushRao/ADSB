@@ -10,6 +10,8 @@
 
   let { plane, isSelected, onSelect }: Props = $props();
 
+  const code = (a: { iata?: string | null; icao?: string | null }) => a.iata || a.icao || '???';
+
   function getAltitudeBadgeColor(altitudeFeet: number): string {
     if (altitudeFeet < 5000) return 'text-sky-400 bg-sky-950/60 border-sky-800/60';
     if (altitudeFeet < 15000) return 'text-emerald-400 bg-emerald-950/60 border-emerald-800/60';
@@ -42,9 +44,18 @@
         <div class="font-mono font-bold text-sm tracking-wider {isSelected ? 'text-cyan-300' : 'text-slate-100'}">
           {plane.callsign}
         </div>
-        <div class="text-[10px] font-mono text-slate-400">
-          HEX: {plane.hex}
-        </div>
+        {#if plane.route}
+          <div class="text-[10px] font-mono text-slate-300 truncate" title="{plane.route.origin.name} → {plane.route.destination.name}">
+            {code(plane.route.origin)} → {code(plane.route.destination)}
+            {#if plane.route.check === 'off-route' || plane.route.check === 'reverse'}
+              <span class="text-amber-400" title={plane.route.checkDetail}>⚠</span>
+            {/if}
+          </div>
+        {:else}
+          <div class="text-[10px] font-mono text-slate-400">
+            HEX: {plane.hex}
+          </div>
+        {/if}
       </div>
     </div>
 
