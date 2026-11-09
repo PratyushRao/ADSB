@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Aircraft } from '../types/aircraft';
-  import { formatAltitude, formatSpeed } from '../utils/geo';
+  import { formatAltitude, formatSpeed, formatCoords, formatHeading } from '../utils/geo';
 
   interface Props {
     plane: Aircraft;
@@ -12,81 +12,151 @@
 
   const code = (a: { iata?: string | null; icao?: string | null }) => a.iata || a.icao || '???';
 
-  function getAltitudeBadgeColor(altitudeFeet: number): string {
-    if (altitudeFeet < 5000) return 'text-sky-400 bg-sky-950/60 border-sky-800/60';
-    if (altitudeFeet < 15000) return 'text-emerald-400 bg-emerald-950/60 border-emerald-800/60';
-    if (altitudeFeet < 25000) return 'text-amber-400 bg-amber-950/60 border-amber-800/60';
-    if (altitudeFeet < 35000) return 'text-orange-400 bg-orange-950/60 border-orange-800/60';
-    return 'text-rose-400 bg-rose-950/60 border-rose-800/60';
+  // Altitude category color indicator
+  function getAltitudeTone(alt: number) {
+    if (alt >= 25000) return { bar: 'bg-indigo-500', text: 'text-indigo-900', label: 'Cruise' };
+    if (alt >= 10000) return { bar: 'bg-blue-500', text: 'text-blue-900', label: 'Mid' };
+    if (alt >= 3000) return { bar: 'bg-[#168AAD]', text: 'text-[#168AAD]', label: 'Terminal' };
+    return { bar: 'bg-emerald-600', text: 'text-emerald-900', label: 'Approach' };
   }
+
+  const tone = $derived(getAltitudeTone(plane.altitude));
+  const isClimbing = $derived((plane.verticalRate ?? 0) > 200);
+  const isDescending = $derived((plane.verticalRate ?? 0) < -200);
 </script>
 
+<!-- Human-Crafted Aviation Flight Strip Row -->
 <div
   role="button"
   tabindex="0"
   onclick={() => onSelect(plane)}
   onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && onSelect(plane)}
-  class="w-full text-left p-3 rounded-xl transition-all duration-200 border cursor-pointer select-none
+  class="group relative w-full text-left transition-all duration-150 cursor-pointer select-none border-b border-[#E3EAF0]/70
     {isSelected
-      ? 'bg-cyan-950/40 border-cyan-500 shadow-[0_0_15px_rgba(6,182,212,0.25)]'
-      : 'bg-slate-900/60 border-slate-800/80 hover:bg-slate-800/50 hover:border-slate-700'}"
+      ? 'bg-[#F0F8FA] border-b-[#B8DEEB]'
+      : 'bg-white hover:bg-[#F8FAFC]'}"
 >
-  <div class="flex items-center justify-between gap-2 mb-1.5">
-    <!-- Callsign & Plane Icon -->
-    <div class="flex items-center gap-2 min-w-0">
-      <div
-        class="w-7 h-7 rounded-lg flex items-center justify-center text-sm bg-slate-800/90 border border-slate-700/60"
-        style="transform: rotate({Math.round(plane.heading)}deg);"
-      >
-        ✈️
-      </div>
-      <div class="truncate">
-        <div class="font-mono font-bold text-sm tracking-wider {isSelected ? 'text-cyan-300' : 'text-slate-100'}">
+  <!-- Subtle Left Indicator Bar -->
+  <div
+    class="absolute left-0 top-0 bottom-0 w-[3px] transition-all
+      {isSelected ? 'bg-[#168AAD] opacity-100' : 'bg-transparent group-hover:bg-[#CBD5E1]'}"
+  ></div>
+
+  <!-- Main Flight Row Container with Generous Whitespace -->
+  <div class="pl-4 pr-3.5 py-3">
+    <!-- Row 1: Identification & Altitude -->
+    <div class="flex items-baseline justify-between gap-3">
+      <!-- Left: Callsign & Micro Directional Silhouette -->
+      <div class="flex items-center gap-2 min-w-0">
+        <!-- Directional Vector Icon (Rotated to Heading) -->
+        <svg
+          class="w-3.5 h-3.5 shrink-0 transition-transform duration-300 {isSelected ? 'text-[#168AAD]' : 'text-[#718096] group-hover:text-[#168AAD]'}"
+          style="transform: rotate({Math.round(plane.heading)}deg);"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path d="M12 2C11.4 2 11 2.5 11 3.2V8.5L3.5 13V15L11 12.8V18.2L8.5 20.2V22L12 21L15.5 22V20.2L13 18.2V12.8L20.5 15V13L13 8.5V3.2C13 2.5 12.6 2 12 2Z" />
+        </svg>
+
+        <span class="font-mono font-semibold text-sm tracking-tight text-[#263747] {isSelected ? 'text-[#168AAD]' : ''}">
           {plane.callsign}
-        </div>
-        {#if plane.route}
-          <div class="text-[10px] font-mono text-slate-300 truncate" title="{plane.route.origin.name} → {plane.route.destination.name}">
-            {code(plane.route.origin)} → {code(plane.route.destination)}
-            {#if plane.route.check === 'off-route' || plane.route.check === 'reverse'}
-              <span class="text-amber-400" title={plane.route.checkDetail}>⚠</span>
-            {/if}
-          </div>
-        {:else}
-          <div class="text-[10px] font-mono text-slate-400">
-            HEX: {plane.hex}
-          </div>
+        </span>
+
+        <span class="text-[11px] font-mono text-[#718096]">
+          {plane.hex}
+        </span>
+
+        {#if plane.category}
+          <span class="text-[10px] font-mono text-[#718096]/80 hidden sm:inline">
+            · {plane.category}
+          </span>
+        {/if}
+      </div>
+
+      <!-- Right: Altitude & Vertical Rate -->
+      <div class="flex items-baseline gap-1.5 shrink-0 text-right font-mono">
+        <span class="font-bold text-sm text-[#263747]">
+          {formatAltitude(plane.altitude)}
+        </span>
+
+        {#if isClimbing}
+          <span class="text-[10px] font-medium text-[#239B75] flex items-center">
+            ↑{plane.verticalRate}
+          </span>
+        {:else if isDescending}
+          <span class="text-[10px] font-medium text-[#D97706] flex items-center">
+            ↓{Math.abs(plane.verticalRate ?? 0)}
+          </span>
         {/if}
       </div>
     </div>
 
-    <!-- Altitude Badge -->
-    <div class="flex flex-col items-end">
-      <span class="px-2 py-0.5 rounded text-[11px] font-mono font-semibold border {getAltitudeBadgeColor(plane.altitude)}">
-        {formatAltitude(plane.altitude)}
-        {#if (plane.verticalRate ?? 0) > 200}
-          <span class="text-emerald-400 ml-0.5">▲</span>
-        {:else if (plane.verticalRate ?? 0) < -200}
-          <span class="text-rose-400 ml-0.5">▼</span>
+    <!-- Row 2: Route / Origin-Destination (If Available) -->
+    {#if plane.route}
+      <div class="mt-1 flex items-center gap-1.5 text-xs text-[#718096]">
+        <span class="font-semibold text-[#263747]">{code(plane.route.origin)}</span>
+        <span class="text-[#CBD5E1] text-[10px]">→</span>
+        <span class="font-semibold text-[#263747]">{code(plane.route.destination)}</span>
+        {#if plane.route.airline}
+          <span class="text-[11px] text-[#718096] truncate">· {plane.route.airline}</span>
         {/if}
-      </span>
-    </div>
-  </div>
+        {#if plane.route.check === 'off-route' || plane.route.check === 'reverse'}
+          <span class="text-[#E5A33D] font-bold text-[10px]" title={plane.route.checkDetail}>⚠</span>
+        {/if}
+      </div>
+    {/if}
 
-  <!-- Telemetry Metrics Grid -->
-  <div class="grid grid-cols-3 gap-2 pt-1 border-t border-slate-800/60 text-[11px] font-mono">
-    <div>
-      <span class="text-slate-500 block text-[9px] uppercase tracking-wider">Speed</span>
-      <span class="text-slate-200 font-medium">{formatSpeed(plane.speed)}</span>
+    <!-- Row 3: Telemetry Data Line (Clean, Unboxed Editorial Spacing) -->
+    <div class="mt-1.5 flex items-center gap-3 text-[11px] font-mono text-[#718096]">
+      <div>
+        <span class="text-[#263747] font-medium">{formatSpeed(plane.speed)}</span>
+      </div>
+      <div class="text-[#CBD5E1]">·</div>
+      <div>
+        <span class="text-[#263747] font-medium">{Math.round(plane.heading)}°</span>
+      </div>
+      <div class="text-[#CBD5E1]">·</div>
+      <div>
+        <span class="text-[#168AAD] font-semibold">
+          {plane.distanceNm !== undefined ? `${plane.distanceNm.toFixed(1)} NM` : '--'}
+        </span>
+      </div>
+      {#if !plane.route && plane.squawk}
+        <div class="text-[#CBD5E1]">·</div>
+        <div class="text-[10px]">
+          SQ {plane.squawk}
+        </div>
+      {/if}
     </div>
-    <div>
-      <span class="text-slate-500 block text-[9px] uppercase tracking-wider">Track</span>
-      <span class="text-slate-200 font-medium">{Math.round(plane.heading)}°</span>
-    </div>
-    <div class="text-right">
-      <span class="text-slate-500 block text-[9px] uppercase tracking-wider">Distance</span>
-      <span class="text-cyan-400 font-medium">
-        {plane.distanceNm !== undefined ? `${plane.distanceNm.toFixed(1)} NM` : '--'}
-      </span>
-    </div>
+
+    <!-- Inline Expanded Telemetry Details (Smoothly Shown When Selected) -->
+    {#if isSelected}
+      <div class="mt-3 pt-2.5 border-t border-[#B8DEEB]/80 text-[11px] font-mono text-[#718096] space-y-1.5">
+        <div class="flex items-center justify-between">
+          <span>Coords: <strong class="text-[#263747] font-normal">{formatCoords(plane.lat, plane.lon)}</strong></span>
+          <span>Bearing: <strong class="text-[#168AAD] font-semibold">BRG {plane.bearingDeg !== undefined ? `${Math.round(plane.bearingDeg)}°` : '--'}</strong></span>
+        </div>
+
+        <div class="flex items-center justify-between text-[10px]">
+          <span>Squawk: <strong class="text-[#263747] font-normal">{plane.squawk || 'None'}</strong></span>
+          <span>History: <strong class="text-[#263747] font-normal">{plane.trail?.length ?? 1} points</strong></span>
+          <span>Last seen: <strong class="text-[#263747] font-normal">{plane.seen}s ago</strong></span>
+        </div>
+
+        {#if plane.route}
+          <div class="text-[10px] text-[#718096] pt-1 border-t border-slate-100 flex items-center justify-between">
+            <span>Route verification: <strong class="text-[#239B75] font-normal">{plane.route.check}</strong></span>
+            <span class="text-[#718096]/70">{plane.route.source}</span>
+          </div>
+        {/if}
+
+        <div class="pt-1 flex justify-end">
+          <span class="text-[10px] text-[#168AAD] hover:underline font-sans cursor-pointer">
+            Click to deselect / collapse
+          </span>
+        </div>
+      </div>
+    {/if}
   </div>
 </div>

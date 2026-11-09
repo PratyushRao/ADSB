@@ -2,15 +2,13 @@
   import { onMount, onDestroy } from 'svelte';
   import L from 'leaflet';
   import type { Aircraft, ReceiverLocation } from '../types/aircraft';
-  import { formatAltitude, formatSpeed, formatCoords } from '../utils/geo';
+  import { formatAltitude, formatCoords } from '../utils/geo';
 
   interface Props {
     aircraft: Aircraft[];
     selectedPlane: Aircraft | null;
     receiver: ReceiverLocation;
-    showRangeRings?: boolean;
-    showTrails?: boolean;
-    mapLayer?: 'dark' | 'osm' | 'satellite';
+    mapLayer?: 'osm' | 'satellite' | 'dark';
     onSelectPlane: (plane: Aircraft | null) => void;
   }
 
@@ -18,59 +16,68 @@
     aircraft = [],
     selectedPlane = null,
     receiver,
-    showRangeRings = true,
-    showTrails = true,
-    mapLayer = 'dark',
+    mapLayer = 'osm',
     onSelectPlane,
   }: Props = $props();
 
   let mapContainer: HTMLDivElement | null = null;
   let map: L.Map | null = null;
   let currentTileLayer: L.TileLayer | null = null;
+  let currentLayerType: 'osm' | 'satellite' | 'dark' | null = null;
+  let resizeObserver: ResizeObserver | null = null;
 
-  // Markers and overlays storage
+  // Markers storage
   const markers = new Map<string, L.Marker>();
-  const trails = new Map<string, L.Polyline>();
   let receiverMarker: L.Marker | null = null;
-  let rangeCircles: L.Circle[] = [];
 
   const TILE_PROVIDERS = {
+    osm: {
+      url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxNativeZoom: 19,
+      maxZoom: 19,
+    },
+    satellite: {
+      url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and GIS User Community',
+      maxNativeZoom: 18,
+      maxZoom: 19,
+    },
     dark: {
       url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
       attribution: 'Tiles &copy; <a href="https://www.esri.com/">Esri</a> &mdash; Dark Canvas',
       maxNativeZoom: 16,
       maxZoom: 19,
     },
-    osm: {
-      url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    },
-    satellite: {
-      url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
-    },
   };
 
   onMount(() => {
     if (!mapContainer) return;
 
-    // Initialize Leaflet map
+    // Initialize Leaflet map with standard Street layer default
     map = L.map(mapContainer, {
       center: [receiver.lat, receiver.lon],
       zoom: 9,
       zoomControl: false,
     });
 
-    // Custom top-right zoom control
-    L.control.zoom({ position: 'topright' }).addTo(map);
-
     updateTileLayer(mapLayer);
     updateReceiver();
     updateAircraftMarkers();
 
-    // Map click outside deselects
+    // Invalidate map size once DOM has fully settled to prevent blank boundary tiles
+    requestAnimationFrame(() => {
+      map?.invalidateSize();
+    });
+
+    // Automatically recalculate map size on window/layout resize
+    resizeObserver = new ResizeObserver(() => {
+      map?.invalidateSize();
+    });
+    resizeObserver.observe(mapContainer);
+
+    // Clicking map background deselects plane
     map.on('click', (e) => {
-      // If clicking directly on map canvas, clear selection
       const target = (e.originalEvent?.target as HTMLElement) || null;
       if (target && !target.closest('.plane-marker')) {
         onSelectPlane(null);
@@ -79,6 +86,10 @@
   });
 
   onDestroy(() => {
+    if (resizeObserver) {
+      resizeObserver.disconnect();
+      resizeObserver = null;
+    }
     if (map) {
       map.remove();
       map = null;
@@ -97,11 +108,6 @@
     }
   });
 
-  // Watch range rings toggle
-  $effect(() => {
-    toggleRangeRings(showRangeRings);
-  });
-
   // Watch aircraft updates
   $effect(() => {
     if (aircraft && map) {
@@ -109,7 +115,7 @@
     }
   });
 
-  // Center on selected plane if selected
+  // Pan to selected plane smoothly
   $effect(() => {
     if (selectedPlane && map) {
       const marker = markers.get(selectedPlane.hex);
@@ -119,35 +125,50 @@
     }
   });
 
-  function updateTileLayer(layerType: 'dark' | 'osm' | 'satellite') {
+  function updateTileLayer(layerType: 'osm' | 'satellite' | 'dark') {
     if (!map) return;
+    // Prevent duplicate layer re-creation if already active
+    if (currentLayerType === layerType && currentTileLayer && map.hasLayer(currentTileLayer)) {
+      return;
+    }
+
     if (currentTileLayer) {
       map.removeLayer(currentTileLayer);
+      currentTileLayer = null;
     }
-    const config = TILE_PROVIDERS[layerType] || TILE_PROVIDERS.dark;
+
+    const config = TILE_PROVIDERS[layerType] || TILE_PROVIDERS.osm;
+    currentLayerType = layerType;
     currentTileLayer = L.tileLayer(config.url, {
       attribution: config.attribution,
-      maxZoom: 19,
-      maxNativeZoom: (config as any).maxNativeZoom || 19,
-      subdomains: 'abcd',
-    }).addTo(map);
+      maxZoom: config.maxZoom || 19,
+      maxNativeZoom: config.maxNativeZoom || 19,
+      crossOrigin: true,
+      keepBuffer: 3,
+      updateWhenIdle: false,
+      updateWhenZooming: false,
+    });
+
+    currentTileLayer.on('tileerror', (e) => {
+      console.warn('Map tile failed to load:', e.coords);
+    });
+
+    currentTileLayer.addTo(map);
   }
 
   function updateReceiver() {
     if (!map) return;
 
-    // Clear old range circles
-    rangeCircles.forEach((c) => map?.removeLayer(c));
-    rangeCircles = [];
-
-    // Receiver Pulse DivIcon
+    // Receiver Pulse Marker
     const rxIcon = L.divIcon({
       className: 'receiver-icon-wrapper',
       html: `
-        <div class="relative flex items-center justify-center w-8 h-8">
-          <div class="absolute w-8 h-8 rounded-full bg-cyan-500/20 animate-ping"></div>
-          <div class="absolute w-4 h-4 rounded-full bg-cyan-500/40"></div>
-          <div class="w-2.5 h-2.5 rounded-full bg-cyan-400 border-2 border-white shadow-lg"></div>
+        <div class="relative flex items-center justify-center w-8 h-8 pointer-events-auto cursor-pointer group">
+          <div class="absolute w-8 h-8 rounded-full bg-[#168AAD]/20 animate-radar-pulse"></div>
+          <div class="absolute w-5 h-5 rounded-full bg-[#168AAD]/30"></div>
+          <div class="relative w-3.5 h-3.5 rounded-full bg-[#168AAD] border-2 border-white shadow-md flex items-center justify-center">
+            <div class="w-1 h-1 rounded-full bg-white"></div>
+          </div>
         </div>
       `,
       iconSize: [32, 32],
@@ -162,50 +183,30 @@
         zIndexOffset: 100,
       }).addTo(map);
 
-      receiverMarker.bindTooltip(`📡 ${receiver.name}<br>${formatCoords(receiver.lat, receiver.lon)}`, {
-        direction: 'top',
-        className: 'bg-slate-900 text-cyan-300 font-mono text-xs border border-cyan-800 rounded p-1.5 shadow-xl',
-      });
+      receiverMarker.bindTooltip(
+        `<div class="font-sans text-xs">
+          <div class="font-bold text-[#263747] flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-[#239B75]"></span>
+            ${receiver.name}
+          </div>
+          <div class="font-mono text-[10px] text-[#718096] mt-0.5">${formatCoords(receiver.lat, receiver.lon)}</div>
+          <div class="text-[9px] text-[#168AAD] font-semibold mt-1">Ground Station Antenna</div>
+        </div>`,
+        {
+          direction: 'top',
+          className: 'bg-white text-[#263747] border border-[#E3EAF0] rounded-xl p-2 shadow-lg backdrop-blur-sm',
+          offset: [0, -10],
+        }
+      );
     }
-
-    // Add Range Rings (10 NM, 25 NM, 50 NM, 100 NM)
-    const NM_TO_METERS = 1852;
-    const ringDistancesNm = [10, 25, 50, 100];
-    ringDistancesNm.forEach((nm) => {
-      const circle = L.circle([receiver.lat, receiver.lon], {
-        radius: nm * NM_TO_METERS,
-        color: '#06b6d4',
-        weight: 1,
-        dashArray: '4, 8',
-        fill: false,
-        opacity: 0.35,
-        interactive: false,
-      });
-
-      if (showRangeRings) {
-        circle.addTo(map!);
-      }
-      rangeCircles.push(circle);
-    });
-  }
-
-  function toggleRangeRings(show: boolean) {
-    if (!map) return;
-    rangeCircles.forEach((c) => {
-      if (show) {
-        if (!map?.hasLayer(c)) c.addTo(map!);
-      } else {
-        if (map?.hasLayer(c)) map.removeLayer(c);
-      }
-    });
   }
 
   function getAltitudeColor(altitudeFeet: number): string {
-    if (altitudeFeet < 5000) return '#38bdf8'; // light sky blue (low)
-    if (altitudeFeet < 15000) return '#4ade80'; // green (mid-low)
-    if (altitudeFeet < 25000) return '#facc15'; // yellow (mid)
-    if (altitudeFeet < 35000) return '#fb923c'; // orange (cruise)
-    return '#f43f5e'; // rose/magenta (high FL)
+    if (altitudeFeet <= 0) return '#64748B'; // slate (ground)
+    if (altitudeFeet < 10000) return '#0284C7'; // sky blue (low)
+    if (altitudeFeet < 25000) return '#168AAD'; // teal (mid)
+    if (altitudeFeet < 35000) return '#2563EB'; // cobalt (cruise)
+    return '#7C3AED'; // violet (high FL)
   }
 
   function createPlaneIcon(plane: Aircraft, isSelected: boolean) {
@@ -213,43 +214,56 @@
     const heading = Math.round(plane.heading);
     const isClimbing = (plane.verticalRate ?? 0) > 200;
     const isDescending = (plane.verticalRate ?? 0) < -200;
-    const vIndicator = isClimbing ? '▲' : isDescending ? '▼' : '';
+    const vIndicator = isClimbing ? '↑' : isDescending ? '↓' : '';
+
+    const iconColor = isSelected ? '#168AAD' : altColor;
 
     return L.divIcon({
       className: 'plane-marker',
       html: `
         <div class="relative flex flex-col items-center justify-center -translate-x-1/2 -translate-y-1/2 group">
-          <!-- Selection Glow Ring -->
+          <!-- Selection Pulsing Ring Halo -->
           ${
             isSelected
-              ? `<div class="absolute -inset-2.5 rounded-full border-2 border-cyan-400 bg-cyan-400/20 animate-pulse pointer-events-none"></div>`
+              ? `<div class="absolute -inset-3 rounded-full border-2 border-[#168AAD] bg-[#168AAD]/15 animate-pulse pointer-events-none"></div>`
               : ''
           }
           
-          <!-- Airplane Emoji Container with Rotation -->
+          <!-- Aerodynamic Jet SVG Silhouette with Center Rotation -->
           <div 
-            class="transform transition-transform duration-300 ease-out select-none drop-shadow-[0_4px_8px_rgba(0,0,0,0.9)]"
-            style="transform: rotate(${heading}deg); font-size: 26px; line-height: 1;"
+            class="plane-marker-icon-wrapper flex items-center justify-center filter drop-shadow-[0_2px_4px_rgba(38,55,71,0.25)] select-none"
+            style="transform: rotate(${heading}deg); width: 28px; height: 28px;"
           >
-            ✈️
+            <svg viewBox="0 0 24 24" class="w-full h-full" style="color: ${iconColor};">
+              <!-- Crisp white outer stroke outline for contrast over map tiles -->
+              <path
+                d="M12 2C11.4 2 11 2.5 11 3.2V8.5L3.5 13V15L11 12.8V18.2L8.5 20.2V22L12 21L15.5 22V20.2L13 18.2V12.8L20.5 15V13L13 8.5V3.2C13 2.5 12.6 2 12 2Z"
+                fill="currentColor"
+                stroke="#FFFFFF"
+                stroke-width="1.2"
+                stroke-linejoin="round"
+              />
+            </svg>
           </div>
 
-          <!-- Callsign & Altitude Badge -->
-          <div class="mt-0.5 flex items-center gap-1 px-1.5 py-0.5 rounded shadow-lg border border-slate-700/80 bg-slate-950/90 backdrop-blur-sm pointer-events-none select-none">
-            <span class="text-[10px] font-bold font-mono tracking-wider ${isSelected ? 'text-cyan-300 font-extrabold' : 'text-slate-100'}">
+          <!-- Callsign & Altitude Compact Pill Badge -->
+          <div class="mt-0.5 flex items-center gap-1.5 px-1.5 py-0.5 rounded-md shadow-xs border ${isSelected ? 'border-[#168AAD] bg-[#F0F8FA]' : 'border-[#E3EAF0] bg-white/95'} backdrop-blur-md pointer-events-none select-none transition-all">
+            <span class="text-[10px] font-bold font-mono tracking-wide ${isSelected ? 'text-[#168AAD]' : 'text-[#263747]'}">
               ${plane.callsign}
             </span>
-            <span class="text-[9px] font-mono font-medium" style="color: ${altColor}">
+            <span class="text-[9px] font-mono font-semibold" style="color: ${altColor}">
               ${formatAltitude(plane.altitude)} ${vIndicator}
             </span>
-            ${isSelected && plane.route
-              ? `<span class="text-[9px] font-mono text-cyan-400">${plane.route.origin.iata || plane.route.origin.icao || '?'}→${plane.route.destination.iata || plane.route.destination.icao || '?'}</span>`
-              : ''}
+            ${
+              isSelected && plane.route
+                ? `<span class="text-[9px] font-mono font-bold text-[#168AAD] border-l border-[#E3EAF0] pl-1">${plane.route.origin.iata || plane.route.origin.icao || '?'}→${plane.route.destination.iata || plane.route.destination.icao || '?'}</span>`
+                : ''
+            }
           </div>
         </div>
       `,
-      iconSize: [40, 40],
-      iconAnchor: [20, 20],
+      iconSize: [44, 44],
+      iconAnchor: [22, 22],
     });
   }
 
@@ -281,35 +295,6 @@
 
         markers.set(plane.hex, marker);
       }
-
-      // Update Polyline flight trails
-      if (showTrails && plane.trail && plane.trail.length > 1) {
-        let polyline = trails.get(plane.hex);
-        const trailColor = isSelected ? '#22d3ee' : getAltitudeColor(plane.altitude);
-        const trailOpacity = isSelected ? 0.9 : 0.45;
-        const trailWeight = isSelected ? 3 : 2;
-
-        if (polyline) {
-          polyline.setLatLngs(plane.trail);
-          polyline.setStyle({ color: trailColor, opacity: trailOpacity, weight: trailWeight });
-        } else {
-          polyline = L.polyline(plane.trail, {
-            color: trailColor,
-            weight: trailWeight,
-            opacity: trailOpacity,
-            dashArray: isSelected ? undefined : '3, 4',
-            smoothFactor: 1,
-            interactive: false,
-          }).addTo(map);
-          trails.set(plane.hex, polyline);
-        }
-      } else {
-        const polyline = trails.get(plane.hex);
-        if (polyline) {
-          map.removeLayer(polyline);
-          trails.delete(plane.hex);
-        }
-      }
     }
 
     // Prune removed planes
@@ -319,58 +304,83 @@
         markers.delete(hex);
       }
     }
+  }
 
-    for (const [hex, polyline] of trails.entries()) {
-      if (!currentHexSet.has(hex) || !showTrails) {
-        map.removeLayer(polyline);
-        trails.delete(hex);
-      }
-    }
+  export function zoomIn() {
+    map?.zoomIn();
+  }
+
+  export function zoomOut() {
+    map?.zoomOut();
   }
 
   export function centerOnReceiver() {
     if (map && receiver) {
-      map.flyTo([receiver.lat, receiver.lon], 9, { duration: 1 });
+      map.flyTo([receiver.lat, receiver.lon], 9, { duration: 0.8 });
     }
   }
 
   export function fitAllAircraft() {
     if (!map || aircraft.length === 0) return;
     const group = L.featureGroup(Array.from(markers.values()));
-    map.fitBounds(group.getBounds().pad(0.15));
+    map.fitBounds(group.getBounds().pad(0.15), { animate: true, duration: 0.8 });
   }
 </script>
 
-<div class="relative w-full h-full">
+<div class="relative w-full h-full select-none">
   <div bind:this={mapContainer} class="w-full h-full z-0"></div>
 
-  <!-- Map Quick Action Bar (Bottom Right Overlay) -->
-  <div class="absolute bottom-5 right-5 z-20 flex flex-col gap-2">
-    <button
-      onclick={centerOnReceiver}
-      class="p-2.5 rounded-xl bg-slate-900/90 text-cyan-400 hover:text-cyan-200 border border-slate-700/80 shadow-2xl backdrop-blur-md transition-all active:scale-95 hover:border-cyan-500/50"
-      title="Center on Receiver Antenna"
-      aria-label="Center on Receiver"
-    >
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <circle cx="12" cy="12" r="10" stroke-width="2" />
-        <circle cx="12" cy="12" r="3" fill="currentColor" />
-        <line x1="12" y1="2" x2="12" y2="5" stroke-width="2" />
-        <line x1="12" y1="19" x2="12" y2="22" stroke-width="2" />
-        <line x1="2" y1="12" x2="5" y2="12" stroke-width="2" />
-        <line x1="19" y1="12" x2="22" y2="12" stroke-width="2" />
-      </svg>
-    </button>
+  <!-- Floating Map Controls Dock (Frosted Glassmorphism, Top-Right) -->
+  <div class="absolute top-4 right-4 z-20 flex flex-col gap-2">
+    <!-- Navigation & Zoom Control Cluster -->
+    <div class="glass-panel p-1 rounded-xl flex flex-col gap-1 shadow-md bg-white/90 backdrop-blur-md border border-[#E3EAF0]">
+      <button
+        onclick={zoomIn}
+        class="w-8 h-8 rounded-lg flex items-center justify-center text-[#263747] hover:text-[#168AAD] hover:bg-[#F4F7FA] transition active:scale-95"
+        title="Zoom In"
+        aria-label="Zoom In"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 4v16m8-8H4" />
+        </svg>
+      </button>
 
-    <button
-      onclick={fitAllAircraft}
-      class="p-2.5 rounded-xl bg-slate-900/90 text-cyan-400 hover:text-cyan-200 border border-slate-700/80 shadow-2xl backdrop-blur-md transition-all active:scale-95 hover:border-cyan-500/50"
-      title="Fit All Aircraft in View"
-      aria-label="Fit All Aircraft"
-    >
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-      </svg>
-    </button>
+      <button
+        onclick={zoomOut}
+        class="w-8 h-8 rounded-lg flex items-center justify-center text-[#263747] hover:text-[#168AAD] hover:bg-[#F4F7FA] transition active:scale-95"
+        title="Zoom Out"
+        aria-label="Zoom Out"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M20 12H4" />
+        </svg>
+      </button>
+
+      <div class="w-full h-[1px] bg-[#E3EAF0] my-0.5"></div>
+
+      <button
+        onclick={centerOnReceiver}
+        class="w-8 h-8 rounded-lg flex items-center justify-center text-[#263747] hover:text-[#168AAD] hover:bg-[#F4F7FA] transition active:scale-95"
+        title="Center Antenna Location"
+        aria-label="Center Antenna Location"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="9" stroke-width="2" />
+          <circle cx="12" cy="12" r="3" fill="currentColor" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v3m0 12v3M3 12h3m12 0h3" />
+        </svg>
+      </button>
+
+      <button
+        onclick={fitAllAircraft}
+        class="w-8 h-8 rounded-lg flex items-center justify-center text-[#263747] hover:text-[#168AAD] hover:bg-[#F4F7FA] transition active:scale-95"
+        title="Fit All Aircraft in View"
+        aria-label="Fit All Aircraft"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+        </svg>
+      </button>
+    </div>
   </div>
 </div>

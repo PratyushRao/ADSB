@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Aircraft } from '../types/aircraft';
-  import { formatAltitude, formatSpeed, formatCoords } from '../utils/geo';
+  import { formatAltitude, formatSpeed, formatCoords, formatHeading } from '../utils/geo';
 
   interface Props {
     plane: Aircraft | null;
@@ -10,38 +10,55 @@
   let { plane, onClose }: Props = $props();
 
   const checkLabel = {
-    plausible: '✓ matches position',
-    'off-route': '⚠ off route',
-    reverse: '⚠ opposite direction',
-    unverified: 'unverified',
+    plausible: '✓ Matches live position',
+    'off-route': '⚠ Off reported route',
+    reverse: '⚠ Opposite heading',
+    unverified: 'Unverified route',
   } as const;
+
   const checkStyle = {
-    plausible: 'text-emerald-400 bg-emerald-950/60 border-emerald-800/60',
-    'off-route': 'text-amber-400 bg-amber-950/60 border-amber-800/60',
-    reverse: 'text-amber-400 bg-amber-950/60 border-amber-800/60',
-    unverified: 'text-slate-400 bg-slate-900 border-slate-700',
+    plausible: 'text-emerald-700 bg-emerald-50 border-emerald-200',
+    'off-route': 'text-amber-700 bg-amber-50 border-amber-200',
+    reverse: 'text-amber-700 bg-amber-50 border-amber-200',
+    unverified: 'text-slate-600 bg-slate-100 border-slate-200',
   } as const;
+
+  const code = (a: { iata?: string | null; icao?: string | null }) => a.iata || a.icao || '???';
 </script>
 
 {#if plane}
-  <div class="p-4 bg-slate-900/95 backdrop-blur-md border border-slate-700/80 rounded-2xl shadow-2xl text-slate-200">
-    <!-- Header -->
-    <div class="flex items-start justify-between border-b border-slate-800 pb-3 mb-3">
-      <div class="flex items-center gap-3">
+  <div class="glass-panel p-4 bg-white/95 backdrop-blur-md border border-[#E3EAF0] rounded-2xl shadow-xl text-[#263747] max-w-lg w-full select-none">
+    <!-- Header (Prominent Aviation Identification) -->
+    <div class="flex items-start justify-between border-b border-[#E3EAF0] pb-3.5 mb-3.5">
+      <div class="flex items-center gap-3.5">
         <div
-          class="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-2xl border border-slate-700 shadow-inner"
-          style="transform: rotate({Math.round(plane.heading)}deg);"
+          class="w-12 h-12 rounded-xl bg-[#F0F8FA] border border-[#B8DEEB] flex items-center justify-center text-[#168AAD] shadow-2xs shrink-0"
+          title="Track: {Math.round(plane.heading)}°"
         >
-          ✈️
+          <svg
+            class="w-6 h-6 transition-transform duration-300"
+            style="transform: rotate({Math.round(plane.heading)}deg);"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path d="M12 2C11.4 2 11 2.5 11 3.2V8.5L3.5 13V15L11 12.8V18.2L8.5 20.2V22L12 21L15.5 22V20.2L13 18.2V12.8L20.5 15V13L13 8.5V3.2C13 2.5 12.6 2 12 2Z" />
+          </svg>
         </div>
         <div>
-          <h2 class="text-lg font-bold font-mono tracking-wider text-white flex items-center gap-2">
-            {plane.callsign}
-            <span class="text-xs px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-400 border border-cyan-800">
+          <div class="flex items-center gap-2.5">
+            <h2 class="text-xl sm:text-2xl font-bold font-mono tracking-wide text-[#263747] leading-none">
+              {plane.callsign}
+            </h2>
+            <span class="text-xs font-mono px-2.5 py-0.5 rounded-md bg-[#F4F7FA] text-[#168AAD] font-semibold border border-[#E3EAF0] leading-none">
               {plane.hex}
             </span>
-          </h2>
-          <p class="text-xs text-slate-400 font-mono">
+            {#if plane.category}
+              <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-100 text-[#718096] border border-slate-200 leading-none">
+                Cat {plane.category}
+              </span>
+            {/if}
+          </div>
+          <p class="text-xs text-[#718096] font-mono mt-1.5">
             Pos: {formatCoords(plane.lat, plane.lon)}
           </p>
         </div>
@@ -49,7 +66,8 @@
 
       <button
         onclick={onClose}
-        class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition"
+        class="text-[#718096] hover:text-[#263747] p-2 rounded-xl hover:bg-[#F4F7FA] transition"
+        title="Close Inspector"
         aria-label="Close"
       >
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -58,79 +76,120 @@
       </button>
     </div>
 
-    <!-- Route (looked up from the callsign, cross-checked against the live position) -->
+    <!-- Route (when looked up from callsign and cross-checked against live position) -->
     {#if plane.route}
       {@const r = plane.route}
-      <div class="mb-3 p-3 rounded-xl bg-slate-950/70 border border-slate-800 font-mono">
-        <div class="flex items-center justify-between text-[10px] uppercase text-slate-500 mb-2">
-          <span>Route · {r.flight}{r.airline ? ` · ${r.airline}` : ''}</span>
-          <span class="px-2 py-0.5 rounded-full border normal-case {checkStyle[r.check]}" title={r.checkDetail}>
+      <div class="mb-3 p-3 rounded-xl bg-[#F8FAFC] border border-[#E3EAF0]">
+        <div class="flex items-center justify-between text-[10px] uppercase font-semibold text-[#718096] mb-2 font-mono">
+          <span>Flight {r.flight}{r.airline ? ` · ${r.airline}` : ''}</span>
+          <span class="px-2 py-0.5 rounded-full border text-[10px] normal-case font-medium {checkStyle[r.check]}" title={r.checkDetail}>
             {checkLabel[r.check]}
           </span>
         </div>
-        <div class="flex items-center gap-3">
+        <div class="flex items-center justify-between gap-3">
           <div class="flex-1 min-w-0">
-            <div class="text-xl font-bold text-white">{r.origin.iata || r.origin.icao || '???'}</div>
-            <div class="text-[10px] text-slate-400 truncate" title={r.origin.name ?? ''}>{r.origin.city || r.origin.name || ''}</div>
+            <div class="text-xl font-bold font-mono text-[#263747]">{code(r.origin)}</div>
+            <div class="text-[11px] text-[#718096] truncate" title={r.origin.name ?? ''}>
+              {r.origin.city || r.origin.name || 'Origin Airport'}
+            </div>
           </div>
-          <div class="text-cyan-400 text-lg">✈ →</div>
+          <div class="flex flex-col items-center px-2">
+            <span class="text-[#168AAD] text-sm font-bold">✈ ───▶</span>
+            <span class="text-[9px] font-mono text-[#718096]">Direct</span>
+          </div>
           <div class="flex-1 min-w-0 text-right">
-            <div class="text-xl font-bold text-white">{r.destination.iata || r.destination.icao || '???'}</div>
-            <div class="text-[10px] text-slate-400 truncate" title={r.destination.name ?? ''}>{r.destination.city || r.destination.name || ''}</div>
+            <div class="text-xl font-bold font-mono text-[#263747]">{code(r.destination)}</div>
+            <div class="text-[11px] text-[#718096] truncate" title={r.destination.name ?? ''}>
+              {r.destination.city || r.destination.name || 'Dest Airport'}
+            </div>
           </div>
         </div>
-        <div class="mt-2 text-[10px] text-slate-500">{r.checkDetail} · route data: {r.source}</div>
-      </div>
-    {:else if plane.callsign !== plane.hex}
-      <div class="mb-3 p-2 rounded-lg bg-slate-950/40 border border-slate-800/80 text-[11px] font-mono text-slate-500">
-        Route: not found for callsign {plane.callsign}
+        <div class="mt-2 pt-2 border-t border-[#E3EAF0] text-[10px] text-[#718096] flex items-center justify-between">
+          <span>{r.checkDetail}</span>
+          <span class="font-mono text-[9px] text-[#718096]/80">src: {r.source}</span>
+        </div>
       </div>
     {/if}
 
-    <!-- Detailed Flight Data Grid -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-3 font-mono text-xs">
-      <div class="p-2.5 rounded-xl bg-slate-950/70 border border-slate-800">
-        <span class="text-slate-500 block text-[10px] uppercase">Altitude</span>
-        <span class="text-cyan-400 font-bold text-sm">{formatAltitude(plane.altitude)}</span>
-        {#if plane.verticalRate}
-          <span class="text-[10px] block {plane.verticalRate > 0 ? 'text-emerald-400' : 'text-rose-400'}">
-            {plane.verticalRate > 0 ? '+' : ''}{plane.verticalRate} fpm
+    <!-- Unified Telemetry Container (Single surface with subtle vertical dividers) -->
+    <div class="mb-3 rounded-xl bg-[#F8FAFC] border border-[#E3EAF0] shadow-2xs overflow-hidden">
+      <div class="grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 divide-[#E3EAF0] sm:divide-x sm:divide-[#E3EAF0] font-mono">
+        <!-- 1. Altitude -->
+        <div class="px-3.5 py-2.5 flex flex-col justify-between">
+          <span class="text-[#718096] text-[9.5px] uppercase font-sans font-semibold tracking-wider">
+            Altitude
           </span>
-        {/if}
-      </div>
+          <div class="my-0.5">
+            <span class="text-[#168AAD] font-bold text-sm tracking-tight block">
+              {formatAltitude(plane.altitude)}
+            </span>
+          </div>
+          <div class="text-[10px] leading-tight">
+            {#if plane.verticalRate && Math.abs(plane.verticalRate) > 100}
+              <span class="font-semibold {plane.verticalRate > 0 ? 'text-[#239B75]' : 'text-[#D97706]'}">
+                {plane.verticalRate > 0 ? '▲ +' : '▼ '}{plane.verticalRate} fpm
+              </span>
+            {:else}
+              <span class="text-[#718096]">Level flight</span>
+            {/if}
+          </div>
+        </div>
 
-      <div class="p-2.5 rounded-xl bg-slate-950/70 border border-slate-800">
-        <span class="text-slate-500 block text-[10px] uppercase">Speed</span>
-        <span class="text-white font-bold text-sm">{formatSpeed(plane.speed)}</span>
-        <span class="text-[10px] text-slate-400 block">{Math.round(plane.speed * 1.852)} km/h</span>
-      </div>
+        <!-- 2. Ground Speed -->
+        <div class="px-3.5 py-2.5 flex flex-col justify-between">
+          <span class="text-[#718096] text-[9.5px] uppercase font-sans font-semibold tracking-wider">
+            Ground Speed
+          </span>
+          <div class="my-0.5">
+            <span class="text-[#263747] font-bold text-sm tracking-tight block">
+              {formatSpeed(plane.speed)}
+            </span>
+          </div>
+          <div class="text-[10px] text-[#718096] leading-tight">
+            {Math.round(plane.speed * 1.852)} km/h
+          </div>
+        </div>
 
-      <div class="p-2.5 rounded-xl bg-slate-950/70 border border-slate-800">
-        <span class="text-slate-500 block text-[10px] uppercase">Track / Heading</span>
-        <span class="text-white font-bold text-sm">{Math.round(plane.heading)}°</span>
-        <span class="text-[10px] text-slate-400 block">Magnetic track</span>
-      </div>
+        <!-- 3. Track / Heading -->
+        <div class="px-3.5 py-2.5 flex flex-col justify-between">
+          <span class="text-[#718096] text-[9.5px] uppercase font-sans font-semibold tracking-wider">
+            Track / Heading
+          </span>
+          <div class="my-0.5">
+            <span class="text-[#263747] font-bold text-sm tracking-tight block truncate">
+              {formatHeading(plane.heading)}
+            </span>
+          </div>
+          <div class="text-[10px] text-[#718096] leading-tight">
+            True track
+          </div>
+        </div>
 
-      <div class="p-2.5 rounded-xl bg-slate-950/70 border border-slate-800">
-        <span class="text-slate-500 block text-[10px] uppercase">Range & Bearing</span>
-        <span class="text-amber-400 font-bold text-sm">
-          {plane.distanceNm !== undefined ? `${plane.distanceNm.toFixed(1)} NM` : '--'}
-        </span>
-        <span class="text-[10px] text-slate-400 block">
-          BRG {plane.bearingDeg !== undefined ? `${Math.round(plane.bearingDeg)}°` : '--'}
-        </span>
+        <!-- 4. Range & Bearing -->
+        <div class="px-3.5 py-2.5 flex flex-col justify-between">
+          <span class="text-[#718096] text-[9.5px] uppercase font-sans font-semibold tracking-wider">
+            Range & Bearing
+          </span>
+          <div class="my-0.5">
+            <span class="text-[#239B75] font-bold text-sm tracking-tight block">
+              {plane.distanceNm !== undefined ? `${plane.distanceNm.toFixed(1)} NM` : '--'}
+            </span>
+          </div>
+          <div class="text-[10px] text-[#718096] leading-tight">
+            {plane.bearingDeg !== undefined ? `BRG ${Math.round(plane.bearingDeg)}°` : '--'}
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- Secondary Meta -->
-    <div class="flex items-center justify-between text-[11px] font-mono text-slate-400 bg-slate-950/40 p-2 rounded-lg border border-slate-800/80">
+    <!-- Secondary Meta Strip -->
+    <div class="flex items-center justify-between text-[11px] font-mono text-[#718096] bg-[#F4F7FA] px-3 py-2 rounded-xl border border-[#E3EAF0]">
       <div class="flex gap-4">
-        <span>Squawk: <strong class="text-slate-200">{plane.squawk || 'None'}</strong></span>
-        <span>Points: <strong class="text-slate-200">{plane.trail?.length ?? 1}</strong></span>
+        <span>Squawk: <strong class="text-[#263747]">{plane.squawk || 'None'}</strong></span>
+        <span>Points: <strong class="text-[#263747]">{plane.trail?.length ?? 1}</strong></span>
       </div>
-
-      <div class="flex gap-2">
-        {#if plane.category}<span>Cat: <strong class="text-slate-200">{plane.category}</strong></span>{/if}
+      <div>
+        <span>Seen: <strong class="text-[#263747]">{plane.seen}s ago</strong></span>
       </div>
     </div>
   </div>
