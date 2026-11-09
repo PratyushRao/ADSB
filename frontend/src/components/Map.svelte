@@ -185,12 +185,12 @@
 
       receiverMarker.bindTooltip(
         `<div class="font-sans text-xs">
-          <div class="font-bold text-[#263747] flex items-center gap-1.5">
+          <div class="font-medium text-[#263747] flex items-center gap-1.5">
             <span class="w-2 h-2 rounded-full bg-[#239B75]"></span>
             ${receiver.name}
           </div>
-          <div class="font-mono text-[10px] text-[#718096] mt-0.5">${formatCoords(receiver.lat, receiver.lon)}</div>
-          <div class="text-[9px] text-[#168AAD] font-semibold mt-1">Ground Station Antenna</div>
+          <div class="font-mono text-xs text-[#718096] mt-0.5 tabular-nums">${formatCoords(receiver.lat, receiver.lon)}</div>
+          <div class="text-xs text-[#168AAD] font-normal mt-1">Ground Station Antenna</div>
         </div>`,
         {
           direction: 'top',
@@ -247,16 +247,16 @@
           </div>
 
           <!-- Callsign & Altitude Compact Pill Badge -->
-          <div class="mt-0.5 flex items-center gap-1.5 px-1.5 py-0.5 rounded-md shadow-xs border ${isSelected ? 'border-[#168AAD] bg-[#F0F8FA]' : 'border-[#E3EAF0] bg-white/95'} backdrop-blur-md pointer-events-none select-none transition-all">
-            <span class="text-[10px] font-bold font-mono tracking-wide ${isSelected ? 'text-[#168AAD]' : 'text-[#263747]'}">
+          <div class="mt-0.5 flex items-center gap-1.5 px-2 py-0.5 rounded-md shadow-xs border ${isSelected ? 'border-[#168AAD] bg-[#F0F8FA]' : 'border-[#E3EAF0] bg-white/95'} backdrop-blur-md pointer-events-none select-none transition-all">
+            <span class="text-xs font-sans font-semibold ${isSelected ? 'text-[#168AAD]' : 'text-[#263747]'}">
               ${plane.callsign}
             </span>
-            <span class="text-[9px] font-mono font-semibold" style="color: ${altColor}">
+            <span class="text-xs font-mono font-medium tabular-nums" style="color: ${altColor}">
               ${formatAltitude(plane.altitude)} ${vIndicator}
             </span>
             ${
               isSelected && plane.route
-                ? `<span class="text-[9px] font-mono font-bold text-[#168AAD] border-l border-[#E3EAF0] pl-1">${plane.route.origin.iata || plane.route.origin.icao || '?'}→${plane.route.destination.iata || plane.route.destination.icao || '?'}</span>`
+                ? `<span class="text-xs font-sans font-medium text-[#168AAD] border-l border-[#E3EAF0] pl-1.5">${plane.route.origin.iata || plane.route.origin.icao || '?'}→${plane.route.destination.iata || plane.route.destination.icao || '?'}</span>`
                 : ''
             }
           </div>

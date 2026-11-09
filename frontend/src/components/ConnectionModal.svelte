@@ -136,8 +136,8 @@
             </svg>
           </div>
           <div>
-            <h2 class="text-base font-bold text-[#263747]">Data Source & Receiver Settings</h2>
-            <p class="text-xs text-[#718096]">Configure ADS-B demodulator ingestion and ground station antenna</p>
+            <h2 class="text-base font-sans font-medium text-[#263747]">Data Source & Receiver Settings</h2>
+            <p class="text-xs font-sans font-normal text-[#718096]">Configure ADS-B demodulator ingestion and ground station antenna</p>
           </div>
         </div>
         <button
@@ -155,7 +155,7 @@
       <div class="flex border-b border-[#E3EAF0] bg-[#F8FAFC] px-6">
         <button
           onclick={() => (activeTab = 'backend')}
-          class="px-4 py-3 text-xs font-semibold border-b-2 transition flex items-center gap-2 {activeTab === 'backend' ? 'border-[#168AAD] text-[#168AAD]' : 'border-transparent text-[#718096] hover:text-[#263747]'}"
+          class="px-4 py-3 text-xs font-sans font-medium border-b-2 transition flex items-center gap-2 {activeTab === 'backend' ? 'border-[#168AAD] text-[#168AAD]' : 'border-transparent text-[#718096] hover:text-[#263747]'}"
         >
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -164,7 +164,7 @@
         </button>
         <button
           onclick={() => (activeTab = 'upload')}
-          class="px-4 py-3 text-xs font-semibold border-b-2 transition flex items-center gap-2 {activeTab === 'upload' ? 'border-[#168AAD] text-[#168AAD]' : 'border-transparent text-[#718096] hover:text-[#263747]'}"
+          class="px-4 py-3 text-xs font-sans font-medium border-b-2 transition flex items-center gap-2 {activeTab === 'upload' ? 'border-[#168AAD] text-[#168AAD]' : 'border-transparent text-[#718096] hover:text-[#263747]'}"
         >
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -173,7 +173,7 @@
         </button>
         <button
           onclick={() => (activeTab = 'receiver')}
-          class="px-4 py-3 text-xs font-semibold border-b-2 transition flex items-center gap-2 {activeTab === 'receiver' ? 'border-[#168AAD] text-[#168AAD]' : 'border-transparent text-[#718096] hover:text-[#263747]'}"
+          class="px-4 py-3 text-xs font-sans font-medium border-b-2 transition flex items-center gap-2 {activeTab === 'receiver' ? 'border-[#168AAD] text-[#168AAD]' : 'border-transparent text-[#718096] hover:text-[#263747]'}"
         >
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -188,7 +188,7 @@
         {#if activeTab === 'backend'}
           <div class="space-y-4">
             <div>
-              <label for="endpoint-url" class="block text-xs font-semibold text-[#263747] mb-1.5 uppercase font-mono">
+              <label for="endpoint-url" class="block text-xs font-sans font-medium text-[#263747] mb-1.5">
                 Demodulator / Backend Endpoint URL
               </label>
               <div class="relative">
@@ -200,14 +200,14 @@
                   class="w-full px-3.5 py-2.5 rounded-xl bg-[#F8FAFC] border border-[#E3EAF0] font-mono text-xs text-[#263747] focus:outline-none focus:border-[#168AAD] focus:bg-white focus:ring-1 focus:ring-[#168AAD]/30"
                 />
               </div>
-              <p class="mt-1.5 text-xs text-[#718096]">
-                Supports real-time WebSocket streams (<code class="text-[#168AAD]">ws://</code>, <code class="text-[#168AAD]">wss://</code>) or periodic HTTP GET polling.
+              <p class="mt-1.5 text-xs font-sans font-normal text-[#718096]">
+                Supports real-time WebSocket streams (<code class="font-mono text-[#168AAD]">ws://</code>, <code class="font-mono text-[#168AAD]">wss://</code>) or periodic HTTP GET polling.
               </p>
             </div>
 
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label for="poll-rate" class="block text-xs font-semibold text-[#263747] mb-1.5 uppercase font-mono">
+                <label for="poll-rate" class="block text-xs font-sans font-medium text-[#263747] mb-1.5">
                   Poll Rate (seconds)
                 </label>
                 <input
@@ -216,20 +216,20 @@
                   min="0.5"
                   step="0.5"
                   bind:value={intervalSec}
-                  class="w-full px-3.5 py-2 rounded-xl bg-[#F8FAFC] border border-[#E3EAF0] font-mono text-xs text-[#263747] focus:outline-none focus:border-[#168AAD] focus:bg-white"
+                  class="w-full px-3.5 py-2 rounded-xl bg-[#F8FAFC] border border-[#E3EAF0] font-mono text-xs tabular-nums text-[#263747] focus:outline-none focus:border-[#168AAD] focus:bg-white"
                 />
               </div>
 
               <div>
-                <span class="block text-xs font-semibold text-[#263747] mb-1.5 uppercase font-mono">
+                <span class="block text-xs font-sans font-medium text-[#263747] mb-1.5">
                   Simulation Demo Traffic
                 </span>
                 <button
                   type="button"
                   onclick={() => onToggleSimulation(feedStatus.mode !== 'simulation')}
-                  class="w-full py-2 px-3 rounded-xl font-mono text-xs border transition flex items-center justify-center gap-2
+                  class="w-full py-2 px-3 rounded-xl font-sans font-medium text-xs border transition flex items-center justify-center gap-2
                     {feedStatus.mode === 'simulation'
-                      ? 'bg-[#EBF5F8] border-[#168AAD] text-[#168AAD] font-bold shadow-2xs'
+                      ? 'bg-[#EBF5F8] border-[#168AAD] text-[#168AAD] shadow-2xs'
                       : 'bg-[#F8FAFC] border-[#E3EAF0] text-[#718096] hover:bg-slate-100'}"
                 >
                   <span class="w-2 h-2 rounded-full {feedStatus.mode === 'simulation' ? 'bg-[#168AAD] animate-ping' : 'bg-slate-300'}"></span>
@@ -238,14 +238,14 @@
               </div>
             </div>
 
-            <div class="p-3.5 rounded-xl bg-[#F8FAFC] border border-[#E3EAF0] text-xs space-y-1.5">
-              <div class="font-semibold text-[#263747] flex items-center gap-1.5">
+            <div class="p-3.5 rounded-xl bg-[#F8FAFC] border border-[#E3EAF0] text-xs space-y-1.5 font-sans">
+              <div class="font-medium text-[#263747] flex items-center gap-1.5">
                 <span class="text-[#168AAD]">ℹ</span> Supported ADS-B Message Schemas:
               </div>
               <div class="flex flex-wrap gap-1.5 pt-1">
-                <span class="px-2 py-0.5 rounded bg-white border border-[#E3EAF0] font-mono text-[10px] text-[#263747]">dump1090 / readsb / tar1090</span>
-                <span class="px-2 py-0.5 rounded bg-white border border-[#E3EAF0] font-mono text-[10px] text-[#263747]">OpenSky Network (states array)</span>
-                <span class="px-2 py-0.5 rounded bg-white border border-[#E3EAF0] font-mono text-[10px] text-[#263747]">Custom Aircraft JSON Array</span>
+                <span class="px-2 py-0.5 rounded bg-white border border-[#E3EAF0] font-mono text-xs text-[#263747]">dump1090 / readsb / tar1090</span>
+                <span class="px-2 py-0.5 rounded bg-white border border-[#E3EAF0] font-mono text-xs text-[#263747]">OpenSky Network (states array)</span>
+                <span class="px-2 py-0.5 rounded bg-white border border-[#E3EAF0] font-mono text-xs text-[#263747]">Custom Aircraft JSON Array</span>
               </div>
             </div>
 
@@ -253,23 +253,23 @@
               <button
                 type="button"
                 onclick={onClose}
-                class="px-4 py-2 rounded-xl text-xs font-semibold text-[#718096] hover:text-[#263747] hover:bg-[#F4F7FA] transition"
+                class="px-4 py-2 rounded-xl text-xs font-sans font-medium text-[#718096] hover:text-[#263747] hover:bg-[#F4F7FA] transition"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onclick={handleSaveBackend}
-                class="px-5 py-2 rounded-xl text-xs font-semibold bg-[#168AAD] hover:bg-[#13708D] text-white shadow-sm transition"
+                class="px-5 py-2 rounded-xl text-xs font-sans font-medium bg-[#168AAD] hover:bg-[#13708D] text-white shadow-sm transition"
               >
                 Connect & Poll
               </button>
             </div>
           </div>
         {:else if activeTab === 'upload'}
-          <div class="space-y-4">
+          <div class="space-y-4 font-sans">
             <div>
-              <label for="json-file-input" class="block text-xs font-semibold text-[#263747] mb-1.5 uppercase font-mono">
+              <label for="json-file-input" class="block text-xs font-sans font-medium text-[#263747] mb-1.5">
                 Upload JSON File
               </label>
               <input
@@ -277,23 +277,23 @@
                 type="file"
                 accept=".json,application/json"
                 onchange={handleFileUpload}
-                class="block w-full text-xs text-[#718096] file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-[#168AAD] file:text-white hover:file:bg-[#13708D] cursor-pointer bg-[#F8FAFC] border border-[#E3EAF0] rounded-xl p-1.5"
+                class="block w-full text-xs text-[#718096] file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-sans file:font-medium file:bg-[#168AAD] file:text-white hover:file:bg-[#13708D] cursor-pointer bg-[#F8FAFC] border border-[#E3EAF0] rounded-xl p-1.5"
               />
             </div>
 
             <div class="relative flex py-1 items-center">
               <div class="flex-grow border-t border-[#E3EAF0]"></div>
-              <span class="flex-shrink mx-4 text-[10px] font-mono text-[#718096] uppercase font-bold">Or Paste Raw ADS-B JSON</span>
+              <span class="flex-shrink mx-4 text-xs font-sans font-normal text-[#718096]">or paste raw ADS-B JSON</span>
               <div class="flex-grow border-t border-[#E3EAF0]"></div>
             </div>
 
             <div>
               <div class="flex justify-between items-center mb-1">
-                <span class="text-xs text-[#718096]">Enter JSON payload:</span>
+                <span class="text-xs font-sans font-normal text-[#718096]">Enter JSON payload:</span>
                 <button
                   type="button"
                   onclick={loadSampleJson}
-                  class="text-[11px] font-mono text-[#168AAD] hover:underline"
+                  class="text-xs font-sans font-medium text-[#168AAD] hover:underline"
                 >
                   Insert Sample Payload
                 </button>
@@ -310,7 +310,7 @@
               <button
                 type="button"
                 onclick={onClose}
-                class="px-4 py-2 rounded-xl text-xs font-semibold text-[#718096] hover:text-[#263747] hover:bg-[#F4F7FA] transition"
+                class="px-4 py-2 rounded-xl text-xs font-sans font-medium text-[#718096] hover:text-[#263747] hover:bg-[#F4F7FA] transition"
               >
                 Cancel
               </button>
@@ -318,29 +318,29 @@
                 type="button"
                 onclick={handleApplyPastedJson}
                 disabled={!pastedJson.trim()}
-                class="px-5 py-2 rounded-xl text-xs font-semibold bg-[#168AAD] hover:bg-[#13708D] disabled:opacity-50 text-white shadow-sm transition"
+                class="px-5 py-2 rounded-xl text-xs font-sans font-medium bg-[#168AAD] hover:bg-[#13708D] disabled:opacity-50 text-white shadow-sm transition"
               >
                 Load Pasted JSON
               </button>
             </div>
           </div>
         {:else if activeTab === 'receiver'}
-          <div class="space-y-4">
+          <div class="space-y-4 font-sans">
             <div>
-              <label for="rx-name" class="block text-xs font-semibold text-[#263747] mb-1.5 uppercase font-mono">
+              <label for="rx-name" class="block text-xs font-sans font-medium text-[#263747] mb-1.5">
                 Ground Station / Receiver Name
               </label>
               <input
                 id="rx-name"
                 type="text"
                 bind:value={rxName}
-                class="w-full px-3.5 py-2 rounded-xl bg-[#F8FAFC] border border-[#E3EAF0] font-mono text-xs text-[#263747] focus:outline-none focus:border-[#168AAD] focus:bg-white"
+                class="w-full px-3.5 py-2 rounded-xl bg-[#F8FAFC] border border-[#E3EAF0] font-sans text-xs text-[#263747] focus:outline-none focus:border-[#168AAD] focus:bg-white"
               />
             </div>
 
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label for="rx-lat" class="block text-xs font-semibold text-[#263747] mb-1.5 uppercase font-mono">
+                <label for="rx-lat" class="block text-xs font-sans font-medium text-[#263747] mb-1.5">
                   Antenna Latitude (°)
                 </label>
                 <input
@@ -348,12 +348,12 @@
                   type="number"
                   step="0.0001"
                   bind:value={rxLat}
-                  class="w-full px-3.5 py-2 rounded-xl bg-[#F8FAFC] border border-[#E3EAF0] font-mono text-xs text-[#263747] focus:outline-none focus:border-[#168AAD] focus:bg-white"
+                  class="w-full px-3.5 py-2 rounded-xl bg-[#F8FAFC] border border-[#E3EAF0] font-mono text-xs tabular-nums text-[#263747] focus:outline-none focus:border-[#168AAD] focus:bg-white"
                 />
               </div>
 
               <div>
-                <label for="rx-lon" class="block text-xs font-semibold text-[#263747] mb-1.5 uppercase font-mono">
+                <label for="rx-lon" class="block text-xs font-sans font-medium text-[#263747] mb-1.5">
                   Antenna Longitude (°)
                 </label>
                 <input
@@ -361,56 +361,56 @@
                   type="number"
                   step="0.0001"
                   bind:value={rxLon}
-                  class="w-full px-3.5 py-2 rounded-xl bg-[#F8FAFC] border border-[#E3EAF0] font-mono text-xs text-[#263747] focus:outline-none focus:border-[#168AAD] focus:bg-white"
+                  class="w-full px-3.5 py-2 rounded-xl bg-[#F8FAFC] border border-[#E3EAF0] font-mono text-xs tabular-nums text-[#263747] focus:outline-none focus:border-[#168AAD] focus:bg-white"
                 />
               </div>
             </div>
 
             <!-- Quick Geographic Presets -->
             <div class="p-3 rounded-xl bg-[#F8FAFC] border border-[#E3EAF0]">
-              <span class="block text-[10px] font-mono uppercase text-[#718096] font-semibold mb-2">
+              <span class="block text-xs font-sans font-medium text-[#718096] mb-2">
                 Quick Location Presets:
               </span>
               <div class="flex flex-wrap gap-1.5">
                 <button
                   type="button"
                   onclick={() => applyPreset('Delhi Station (VIDP)', 28.5562, 77.1000)}
-                  class="px-2 py-1 rounded bg-white hover:bg-[#EBF5F8] border border-[#E3EAF0] text-[11px] text-[#263747] font-medium transition"
+                  class="px-2.5 py-1 rounded bg-white hover:bg-[#EBF5F8] border border-[#E3EAF0] text-xs font-sans font-medium text-[#263747] transition"
                 >
                   Delhi (VIDP)
                 </button>
                 <button
                   type="button"
                   onclick={() => applyPreset('London Heathrow (EGLL)', 51.4700, -0.4543)}
-                  class="px-2 py-1 rounded bg-white hover:bg-[#EBF5F8] border border-[#E3EAF0] text-[11px] text-[#263747] font-medium transition"
+                  class="px-2.5 py-1 rounded bg-white hover:bg-[#EBF5F8] border border-[#E3EAF0] text-xs font-sans font-medium text-[#263747] transition"
                 >
                   London (EGLL)
                 </button>
                 <button
                   type="button"
                   onclick={() => applyPreset('New York JFK (KJFK)', 40.6413, -73.7781)}
-                  class="px-2 py-1 rounded bg-white hover:bg-[#EBF5F8] border border-[#E3EAF0] text-[11px] text-[#263747] font-medium transition"
+                  class="px-2.5 py-1 rounded bg-white hover:bg-[#EBF5F8] border border-[#E3EAF0] text-xs font-sans font-medium text-[#263747] transition"
                 >
                   New York (KJFK)
                 </button>
                 <button
                   type="button"
                   onclick={() => applyPreset('Frankfurt (EDDF)', 50.0379, 8.5622)}
-                  class="px-2 py-1 rounded bg-white hover:bg-[#EBF5F8] border border-[#E3EAF0] text-[11px] text-[#263747] font-medium transition"
+                  class="px-2.5 py-1 rounded bg-white hover:bg-[#EBF5F8] border border-[#E3EAF0] text-xs font-sans font-medium text-[#263747] transition"
                 >
                   Frankfurt (EDDF)
                 </button>
                 <button
                   type="button"
                   onclick={() => applyPreset('Tokyo Haneda (RJTT)', 35.5494, 139.7798)}
-                  class="px-2 py-1 rounded bg-white hover:bg-[#EBF5F8] border border-[#E3EAF0] text-[11px] text-[#263747] font-medium transition"
+                  class="px-2.5 py-1 rounded bg-white hover:bg-[#EBF5F8] border border-[#E3EAF0] text-xs font-sans font-medium text-[#263747] transition"
                 >
                   Tokyo (RJTT)
                 </button>
               </div>
             </div>
 
-            <p class="text-xs text-[#718096] leading-relaxed">
+            <p class="text-xs font-sans font-normal text-[#718096] leading-relaxed">
               Antenna coordinates define the geographic origin for 10-100 NM radar range rings and calculate exact aircraft distance (NM) and radial bearing.
             </p>
 
@@ -418,14 +418,14 @@
               <button
                 type="button"
                 onclick={onClose}
-                class="px-4 py-2 rounded-xl text-xs font-semibold text-[#718096] hover:text-[#263747] hover:bg-[#F4F7FA] transition"
+                class="px-4 py-2 rounded-xl text-xs font-sans font-medium text-[#718096] hover:text-[#263747] hover:bg-[#F4F7FA] transition"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onclick={handleSaveReceiver}
-                class="px-5 py-2 rounded-xl text-xs font-semibold bg-[#168AAD] hover:bg-[#13708D] text-white shadow-sm transition"
+                class="px-5 py-2 rounded-xl text-xs font-sans font-medium bg-[#168AAD] hover:bg-[#13708D] text-white shadow-sm transition"
               >
                 Update Receiver
               </button>

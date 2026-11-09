@@ -59,33 +59,33 @@
           <path d="M12 2C11.4 2 11 2.5 11 3.2V8.5L3.5 13V15L11 12.8V18.2L8.5 20.2V22L12 21L15.5 22V20.2L13 18.2V12.8L20.5 15V13L13 8.5V3.2C13 2.5 12.6 2 12 2Z" />
         </svg>
 
-        <span class="font-mono font-semibold text-sm tracking-tight text-[#263747] {isSelected ? 'text-[#168AAD]' : ''}">
+        <span class="font-sans font-semibold text-sm text-[#263747] {isSelected ? 'text-[#168AAD]' : ''}">
           {plane.callsign}
         </span>
 
-        <span class="text-[11px] font-mono text-[#718096]">
+        <span class="text-xs font-mono text-[#718096]">
           {plane.hex}
         </span>
 
         {#if plane.category}
-          <span class="text-[10px] font-mono text-[#718096]/80 hidden sm:inline">
-            · {plane.category}
+          <span class="text-xs font-sans font-normal text-[#718096]/80 hidden sm:inline">
+            · Cat {plane.category}
           </span>
         {/if}
       </div>
 
       <!-- Right: Altitude & Vertical Rate -->
-      <div class="flex items-baseline gap-1.5 shrink-0 text-right font-mono">
-        <span class="font-bold text-sm text-[#263747]">
+      <div class="flex items-baseline gap-1.5 shrink-0 text-right">
+        <span class="font-mono font-medium text-sm text-[#263747] tabular-nums">
           {formatAltitude(plane.altitude)}
         </span>
 
         {#if isClimbing}
-          <span class="text-[10px] font-medium text-[#239B75] flex items-center">
+          <span class="text-xs font-mono font-medium text-[#239B75] tabular-nums flex items-center">
             ↑{plane.verticalRate}
           </span>
         {:else if isDescending}
-          <span class="text-[10px] font-medium text-[#D97706] flex items-center">
+          <span class="text-xs font-mono font-medium text-[#D97706] tabular-nums flex items-center">
             ↓{Math.abs(plane.verticalRate ?? 0)}
           </span>
         {/if}
@@ -95,36 +95,36 @@
     <!-- Row 2: Route / Origin-Destination (If Available) -->
     {#if plane.route}
       <div class="mt-1 flex items-center gap-1.5 text-xs text-[#718096]">
-        <span class="font-semibold text-[#263747]">{code(plane.route.origin)}</span>
-        <span class="text-[#CBD5E1] text-[10px]">→</span>
-        <span class="font-semibold text-[#263747]">{code(plane.route.destination)}</span>
+        <span class="font-sans font-medium text-[#263747]">{code(plane.route.origin)}</span>
+        <span class="text-[#CBD5E1] text-xs">→</span>
+        <span class="font-sans font-medium text-[#263747]">{code(plane.route.destination)}</span>
         {#if plane.route.airline}
-          <span class="text-[11px] text-[#718096] truncate">· {plane.route.airline}</span>
+          <span class="text-xs font-sans font-normal text-[#718096] truncate">· {plane.route.airline}</span>
         {/if}
         {#if plane.route.check === 'off-route' || plane.route.check === 'reverse'}
-          <span class="text-[#E5A33D] font-bold text-[10px]" title={plane.route.checkDetail}>⚠</span>
+          <span class="text-[#E5A33D] font-sans font-medium text-xs" title={plane.route.checkDetail}>⚠</span>
         {/if}
       </div>
     {/if}
 
     <!-- Row 3: Telemetry Data Line (Clean, Unboxed Editorial Spacing) -->
-    <div class="mt-1.5 flex items-center gap-3 text-[11px] font-mono text-[#718096]">
+    <div class="mt-1.5 flex items-center gap-3 text-xs font-mono text-[#718096]">
       <div>
-        <span class="text-[#263747] font-medium">{formatSpeed(plane.speed)}</span>
+        <span class="text-[#263747] font-medium tabular-nums">{formatSpeed(plane.speed)}</span>
       </div>
       <div class="text-[#CBD5E1]">·</div>
       <div>
-        <span class="text-[#263747] font-medium">{Math.round(plane.heading)}°</span>
+        <span class="text-[#263747] font-medium tabular-nums">{Math.round(plane.heading)}°</span>
       </div>
       <div class="text-[#CBD5E1]">·</div>
       <div>
-        <span class="text-[#168AAD] font-semibold">
+        <span class="text-[#168AAD] font-medium tabular-nums">
           {plane.distanceNm !== undefined ? `${plane.distanceNm.toFixed(1)} NM` : '--'}
         </span>
       </div>
       {#if !plane.route && plane.squawk}
         <div class="text-[#CBD5E1]">·</div>
-        <div class="text-[10px]">
+        <div class="tabular-nums">
           SQ {plane.squawk}
         </div>
       {/if}
@@ -132,27 +132,27 @@
 
     <!-- Inline Expanded Telemetry Details (Smoothly Shown When Selected) -->
     {#if isSelected}
-      <div class="mt-3 pt-2.5 border-t border-[#B8DEEB]/80 text-[11px] font-mono text-[#718096] space-y-1.5">
+      <div class="mt-3 pt-2.5 border-t border-[#B8DEEB]/80 text-xs text-[#718096] space-y-1.5">
         <div class="flex items-center justify-between">
-          <span>Coords: <strong class="text-[#263747] font-normal">{formatCoords(plane.lat, plane.lon)}</strong></span>
-          <span>Bearing: <strong class="text-[#168AAD] font-semibold">BRG {plane.bearingDeg !== undefined ? `${Math.round(plane.bearingDeg)}°` : '--'}</strong></span>
+          <span class="font-sans font-normal">Coords: <strong class="text-[#263747] font-mono font-normal tabular-nums">{formatCoords(plane.lat, plane.lon)}</strong></span>
+          <span class="font-sans font-normal">Bearing: <strong class="text-[#168AAD] font-mono font-medium tabular-nums">BRG {plane.bearingDeg !== undefined ? `${Math.round(plane.bearingDeg)}°` : '--'}</strong></span>
         </div>
 
-        <div class="flex items-center justify-between text-[10px]">
-          <span>Squawk: <strong class="text-[#263747] font-normal">{plane.squawk || 'None'}</strong></span>
-          <span>History: <strong class="text-[#263747] font-normal">{plane.trail?.length ?? 1} points</strong></span>
-          <span>Last seen: <strong class="text-[#263747] font-normal">{plane.seen}s ago</strong></span>
+        <div class="flex items-center justify-between">
+          <span class="font-sans font-normal">Squawk: <strong class="text-[#263747] font-mono font-normal tabular-nums">{plane.squawk || 'None'}</strong></span>
+          <span class="font-sans font-normal">History: <strong class="text-[#263747] font-mono font-normal tabular-nums">{plane.trail?.length ?? 1} pts</strong></span>
+          <span class="font-sans font-normal">Seen: <strong class="text-[#263747] font-mono font-normal tabular-nums">{plane.seen}s ago</strong></span>
         </div>
 
         {#if plane.route}
-          <div class="text-[10px] text-[#718096] pt-1 border-t border-slate-100 flex items-center justify-between">
-            <span>Route verification: <strong class="text-[#239B75] font-normal">{plane.route.check}</strong></span>
-            <span class="text-[#718096]/70">{plane.route.source}</span>
+          <div class="text-xs text-[#718096] pt-1 border-t border-slate-100 flex items-center justify-between font-sans">
+            <span class="font-normal">Route verification: <strong class="text-[#239B75] font-medium">{plane.route.check}</strong></span>
+            <span class="text-[#718096]/70 font-mono text-xs">{plane.route.source}</span>
           </div>
         {/if}
 
         <div class="pt-1 flex justify-end">
-          <span class="text-[10px] text-[#168AAD] hover:underline font-sans cursor-pointer">
+          <span class="text-xs text-[#168AAD] hover:underline font-sans font-normal cursor-pointer">
             Click to deselect / collapse
           </span>
         </div>

@@ -80,15 +80,15 @@
     <div class="flex items-start justify-between">
       <div>
         <div class="flex items-center gap-2">
-          <h2 class="font-sans font-semibold text-sm tracking-tight text-[#263747]">
+          <h2 class="font-sans font-medium text-sm text-[#263747]">
             Airspace Desk
           </h2>
-          <span class="inline-flex items-center gap-1.5 text-[10px] font-mono text-[#718096]">
+          <span class="inline-flex items-center gap-1.5 text-xs font-sans text-[#718096]">
             <span class="w-1.5 h-1.5 rounded-full {feedStatus.connected || feedStatus.mode === 'simulation' ? 'bg-[#239B75] animate-pulse' : 'bg-[#E5A33D]'}"></span>
             {feedStatus.mode === 'simulation' ? 'Simulation' : feedStatus.connected ? 'Live Feed' : 'Idle'}
           </span>
         </div>
-        <p class="text-xs text-[#718096] mt-0.5 font-sans">
+        <p class="text-xs text-[#718096] mt-0.5 font-sans font-normal">
           {receiver.name.split(' ')[0]} Station · 1090 MHz Mode S
         </p>
       </div>
@@ -113,8 +113,8 @@
         {aircraft.length} {aircraft.length === 1 ? 'Flight' : 'Flights'} in Sector
       </div>
       {#if nearestNm !== null}
-        <div class="text-[11px] font-mono text-[#718096]">
-          Nearest at <span class="text-[#239B75] font-semibold">{nearestNm.toFixed(1)} NM</span>
+        <div class="text-xs font-sans text-[#718096]">
+          Nearest at <span class="text-[#239B75] font-mono font-medium tabular-nums">{nearestNm.toFixed(1)} NM</span>
         </div>
       {/if}
     </div>
@@ -135,7 +135,7 @@
       {#if searchQuery}
         <button
           onclick={() => (searchQuery = '')}
-          class="absolute right-2.5 top-2.5 text-[#718096] hover:text-[#263747] text-xs font-bold"
+          class="absolute right-2.5 top-2.5 text-[#718096] hover:text-[#263747] text-xs font-sans font-medium"
           aria-label="Clear search"
         >
           ✕
@@ -147,16 +147,16 @@
   <!-- FLIGHT QUEUE HEADER & SORTING -->
   <div class="px-5 py-2.5 bg-[#F8FAFC]/80 border-b border-[#E3EAF0]/80 flex items-center justify-between text-xs font-sans text-[#718096]">
     <div>
-      <span class="font-medium text-[#263747]">{filteredAircraft.length}</span>
-      <span class="text-[#718096]">{filteredAircraft.length === 1 ? 'Flight' : 'Flights'}</span>
+      <span class="font-sans font-medium text-[#263747]">{filteredAircraft.length}</span>
+      <span class="text-[#718096] font-sans font-normal">{filteredAircraft.length === 1 ? 'Flight' : 'Flights'}</span>
     </div>
 
     <!-- Quiet Sort Selector -->
     <div class="flex items-center gap-1.5 text-xs font-sans">
-      <span class="text-[#718096]">Sort by</span>
+      <span class="text-[#718096] font-normal">Sort by</span>
       <select
         bind:value={sortBy}
-        class="bg-transparent border-0 text-[#263747] font-medium text-xs focus:outline-none cursor-pointer hover:text-[#168AAD]"
+        class="bg-transparent border-0 text-[#263747] font-sans font-medium text-xs focus:outline-none cursor-pointer hover:text-[#168AAD]"
       >
         <option value="distance">Distance</option>
         <option value="altitude">Altitude</option>
@@ -187,7 +187,7 @@
         <p class="font-sans font-medium text-xs text-[#263747] mb-1">
           {searchQuery ? 'No Matching Flights' : 'No Flights Detected in Sector'}
         </p>
-        <p class="text-[11px] text-[#718096] max-w-[220px] leading-relaxed mb-3">
+        <p class="text-xs text-[#718096] font-sans font-normal max-w-[220px] leading-relaxed mb-3">
           {searchQuery
             ? 'Try broadening your search term.'
             : 'Listening for live 1090 MHz Mode S ADS-B transmissions on station antenna.'}
@@ -214,25 +214,25 @@
   <!-- BOTTOM MAP LAYER CONTROLS (Street, Satellite, Dark only) -->
   <div class="px-5 py-2.5 bg-[#F8FAFC] border-t border-[#E3EAF0]/80 flex items-center justify-between text-xs font-sans text-[#718096]">
     <div class="flex items-center gap-2">
-      <span class="text-[11px] text-[#718096]">Map:</span>
+      <span class="text-xs font-sans text-[#718096]">Map:</span>
       <div class="flex items-center gap-2 text-xs">
         <button
           onclick={() => onChangeMapLayer('osm')}
-          class="transition {mapLayer === 'osm' ? 'text-[#168AAD] font-semibold' : 'text-[#718096] hover:text-[#263747]'}"
+          class="transition font-sans font-medium {mapLayer === 'osm' ? 'text-[#168AAD]' : 'text-[#718096] hover:text-[#263747]'}"
         >
           Street
         </button>
         <span class="text-[#CBD5E1]">·</span>
         <button
           onclick={() => onChangeMapLayer('satellite')}
-          class="transition {mapLayer === 'satellite' ? 'text-[#168AAD] font-semibold' : 'text-[#718096] hover:text-[#263747]'}"
+          class="transition font-sans font-medium {mapLayer === 'satellite' ? 'text-[#168AAD]' : 'text-[#718096] hover:text-[#263747]'}"
         >
           Satellite
         </button>
         <span class="text-[#CBD5E1]">·</span>
         <button
           onclick={() => onChangeMapLayer('dark')}
-          class="transition {mapLayer === 'dark' ? 'text-[#168AAD] font-semibold' : 'text-[#718096] hover:text-[#263747]'}"
+          class="transition font-sans font-medium {mapLayer === 'dark' ? 'text-[#168AAD]' : 'text-[#718096] hover:text-[#263747]'}"
         >
           Dark
         </button>

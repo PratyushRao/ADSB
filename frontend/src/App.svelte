@@ -303,20 +303,20 @@
 
       <div class="flex flex-col justify-center">
         <div class="flex items-center gap-2">
-          <h1 class="font-bold text-[15px] sm:text-base tracking-wide text-[#263747] font-mono leading-none">
+          <h1 class="font-sans font-medium text-[15px] sm:text-base text-[#263747] leading-none">
             ADSB RADAR
           </h1>
-          <span class="hidden sm:inline-block text-[10px] font-mono px-2 py-0.5 rounded bg-[#EAF5F8] text-[#168AAD] font-semibold border border-[#C5E4EF] leading-none">
+          <span class="hidden sm:inline-block text-xs font-mono font-normal px-2 py-0.5 rounded bg-[#EAF5F8] text-[#168AAD] border border-[#C5E4EF] leading-none tabular-nums">
             1090 MHz
           </span>
         </div>
-        <p class="hidden sm:block text-[10px] text-[#718096] font-sans tracking-normal mt-1 leading-none">
+        <p class="hidden sm:block text-xs text-[#718096] font-sans font-normal mt-1 leading-none">
           Live Air Traffic Monitor
         </p>
       </div>
 
       <!-- Live Stream Status Pill -->
-      <div class="ml-2 flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-mono
+      <div class="ml-2 flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs
         {feedStatus.connected || feedStatus.mode === 'simulation'
           ? 'bg-[#EBFBF5] text-[#239B75] border-[#B7EDD7]'
           : 'bg-[#FFF8EB] text-[#E5A33D] border-[#FCE2B6]'}"
@@ -327,7 +327,7 @@
           {/if}
           <span class="relative inline-flex rounded-full h-2 w-2 {feedStatus.connected || feedStatus.mode === 'simulation' ? 'bg-[#239B75]' : 'bg-[#E5A33D]'}"></span>
         </span>
-        <span class="font-semibold text-[10.5px] tracking-wider uppercase">
+        <span class="font-sans font-medium text-xs">
           {feedStatus.mode === 'simulation'
             ? 'Simulation'
             : feedStatus.connected
@@ -340,22 +340,22 @@
     </div>
 
     <!-- Center Metrics Pills (Desktop / Tablet) -->
-    <div class="hidden lg:flex items-center gap-2.5 text-xs font-mono">
+    <div class="hidden lg:flex items-center gap-2.5 text-xs">
       <div class="px-3 py-1.5 rounded-lg bg-[#F4F7FA] border border-[#E3EAF0] text-[#263747] flex items-center gap-1.5">
-        <span class="text-[#718096]">Active:</span>
-        <strong class="text-[#168AAD]">{aircraftList.length} Aircraft</strong>
+        <span class="text-[#718096] font-sans font-normal">Active:</span>
+        <span class="text-[#168AAD] font-mono font-medium tabular-nums">{aircraftList.length} Aircraft</span>
       </div>
 
       <div class="px-3 py-1.5 rounded-lg bg-[#F4F7FA] border border-[#E3EAF0] text-[#263747] flex items-center gap-1.5">
-        <span class="text-[#718096]">Nearest:</span>
-        <strong class="text-[#239B75]">
+        <span class="text-[#718096] font-sans font-normal">Nearest:</span>
+        <span class="text-[#239B75] font-mono font-medium tabular-nums">
           {nearestDistanceNm !== null && nearestDistanceNm < 9999 ? `${nearestDistanceNm.toFixed(1)} NM` : '--'}
-        </strong>
+        </span>
       </div>
 
       <div class="px-3 py-1.5 rounded-lg bg-[#F4F7FA] border border-[#E3EAF0] text-[#718096] flex items-center gap-1.5 truncate max-w-xs" title={receiver.name}>
-        <span>Antenna:</span>
-        <span class="text-[#263747] font-medium truncate">{receiver.name.split(' ')[0]}</span>
+        <span class="font-sans font-normal">Antenna:</span>
+        <span class="text-[#263747] font-sans font-medium truncate">{receiver.name.split(' ')[0]}</span>
       </div>
     </div>
 
@@ -364,9 +364,9 @@
       <!-- Quick Demo / Simulation Switch -->
       <button
         onclick={() => handleToggleSimulation(feedStatus.mode !== 'simulation')}
-        class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono border transition
+        class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-sans font-medium border transition
           {feedStatus.mode === 'simulation'
-            ? 'bg-[#EBF5F8] text-[#168AAD] border-[#B8DEEB] font-bold'
+            ? 'bg-[#EBF5F8] text-[#168AAD] border-[#B8DEEB]'
             : 'bg-white text-[#718096] border-[#E3EAF0] hover:text-[#263747] hover:border-slate-300'}"
         title="Toggle Simulated Air Traffic"
       >
@@ -377,7 +377,7 @@
       <!-- Data Source / Receiver Configuration Button -->
       <button
         onclick={() => (isSettingsOpen = true)}
-        class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#F4F7FA] hover:bg-[#EBF5F8] text-[#263747] hover:text-[#168AAD] border border-[#E3EAF0] hover:border-[#B8DEEB] text-xs font-medium transition shadow-2xs active:scale-95"
+        class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#F4F7FA] hover:bg-[#EBF5F8] text-[#263747] hover:text-[#168AAD] border border-[#E3EAF0] hover:border-[#B8DEEB] text-xs font-sans font-medium transition shadow-2xs active:scale-95"
         title="Configure Data Source & Ground Receiver"
         aria-label="Settings"
       >
@@ -385,7 +385,7 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
           <circle cx="12" cy="12" r="3" stroke-width="1.8" />
         </svg>
-        <span class="hidden sm:inline font-mono">Feed Settings</span>
+        <span class="hidden sm:inline font-sans font-medium">Feed Settings</span>
       </button>
     </div>
   </header>
@@ -447,7 +447,7 @@
           <span>{feedStatus.error}</span>
           <button
             onclick={() => (isSettingsOpen = true)}
-            class="text-[#168AAD] hover:underline font-bold ml-1 font-mono"
+            class="text-[#168AAD] hover:underline font-sans font-medium ml-1"
           >
             Check Settings
           </button>
@@ -457,28 +457,28 @@
   </div>
 
   <!-- Bottom Status Bar -->
-  <footer class="h-7 bg-white border-t border-[#E3EAF0] px-4 flex items-center justify-between text-[11px] font-mono text-[#718096] shrink-0 z-20">
+  <footer class="h-7 bg-white border-t border-[#E3EAF0] px-4 flex items-center justify-between text-xs font-sans text-[#718096] shrink-0 z-20">
     <div class="flex items-center gap-4">
       <div class="flex items-center gap-1.5">
         <span class="w-1.5 h-1.5 rounded-full bg-[#168AAD]"></span>
-        <span>Station: <strong class="text-[#263747]">{receiver.name}</strong> ({formatCoords(receiver.lat, receiver.lon)})</span>
+        <span>Station: <strong class="text-[#263747] font-medium">{receiver.name}</strong> (<span class="font-mono tabular-nums">{formatCoords(receiver.lat, receiver.lon)}</span>)</span>
       </div>
       <div class="hidden md:inline text-[#CBD5E1]">|</div>
       <div class="hidden md:flex items-center gap-1">
         <span>Tracked:</span>
-        <strong class="text-[#168AAD]">{aircraftList.length}</strong>
+        <strong class="text-[#168AAD] font-mono font-medium tabular-nums">{aircraftList.length}</strong>
       </div>
     </div>
 
     <div class="flex items-center gap-4">
       <div class="hidden sm:flex items-center gap-1">
         <span>Throughput:</span>
-        <strong class="text-[#263747]">{feedStatus.totalMessagesReceived.toLocaleString()} msgs</strong>
+        <strong class="text-[#263747] font-mono font-medium tabular-nums">{feedStatus.totalMessagesReceived.toLocaleString()} msgs</strong>
       </div>
       <div class="hidden sm:inline text-[#CBD5E1]">|</div>
       <div class="flex items-center gap-1">
         <span>Updated:</span>
-        <strong class="text-[#263747]">{secondsAgo !== null ? `${secondsAgo}s ago` : 'Waiting'}</strong>
+        <strong class="text-[#263747] font-mono font-medium tabular-nums">{secondsAgo !== null ? `${secondsAgo}s ago` : 'Waiting'}</strong>
       </div>
     </div>
   </footer>
