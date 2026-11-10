@@ -1,6 +1,16 @@
-# ✈️ ADS-B Flight Radar & Visualizer
+# ✈ ADS-B Flight Radar & Visualizer
+A real-time flight tracking radar and visualization system built with Svelte 5, TypeScript, Tailwind CSS v4, and Leaflet on the frontend, paired with an asynchronous FastAPI backend for live telemetry ingestion. Designed for SDR and DSP demodulators to track and display aircraft in real time over the air.
+### DSP Assignment 1: Digital Signal Processing in Today's Era
 
-A real-time flight tracking radar and visualization system built with **Svelte 5**, **TypeScript**, **Tailwind CSS v4**, and **Leaflet** on the frontend, paired with an asynchronous **FastAPI** backend for live telemetry ingestion. Designed for SDR and DSP demodulators to track and display aircraft in real time over the air.
+| Name | Roll Number |
+| :--- | :--- |
+| **Mudit Bengani** | `241090045` |
+| **Muskaan Karwa** | `241091046` |
+| **Pratyush Rao** | `241090059` |
+| **Purvasha Singh** | `241091060` |
+| **Sarvaarth Narang** | `241090067` |
+| **Paarth Shirsat** | `241090072` |
+| **Swamini Jadhav** | `241091077` |
 
 ---
 
@@ -53,7 +63,7 @@ ADSB/
 
 ---
 
-## ⚡ Startup Commands
+## How to Use
 
 ### 1. Start the Backend Server (FastAPI)
 
@@ -123,7 +133,7 @@ Open your browser and navigate to:
 
 ---
 
-## 📡 Backend Data JSON Structure Format
+## Backend Data JSON Structure Format
 
 The frontend receives flight updates either through a continuous **WebSocket push** (`ws://127.0.0.1:8000/ws`) or via periodic **HTTP GET polling** (`http://127.0.0.1:8000/api/aircraft`).
 
@@ -216,7 +226,7 @@ The frontend also decodes state vectors from OpenSky:
 
 ---
 
-### 📋 Field Specification Table
+### Field Spec Table
 
 | Field Key | Aliases Accepted | Type | Required? | Description & Frontend Behavior |
 | :--- | :--- | :--- | :--- | :--- |
@@ -234,7 +244,7 @@ The frontend also decodes state vectors from OpenSky:
 
 ---
 
-## 🛠️ How Data Flows into the System
+## Data Flow Diagram
 
 ```
 [ RTL-SDR / HackRF / USRP Dongle ] 
@@ -257,21 +267,5 @@ The frontend also decodes state vectors from OpenSky:
                  ▼
 [ Svelte 5 Frontend (App.svelte) ] ── Renders rotated ✈️ emojis on Leaflet radar map
 ```
-
 ---
-
-## 🗺️ Status & Roadmap
-
-**Done**
-- Live reception from an RTL-SDR through GNU Radio (gr-soapy), with our own Mode-S demodulator block: phase-invariant preamble detection, sub-sample phase slicing, Viterbi fallback, CRC-24 with 1-bit correction, address/parity checks. No dump1090/readsb.
-- pyModeS decoding (callsign, altitude, CPR position, velocity, squawk) into the tracker; WebSocket push to the map.
-- IQ-file replay, synthetic test-signal generator, simulated feed, GNU Radio Companion flowgraph.
-- Origin/destination per callsign from free route databases, with a live-position plausibility check (no Flightradar24 dependency).
-- Receiver location (`--lat/--lon`) sent to the map.
-
-**To do**
-- **UI revamp** of the frontend.
-- **Heading-aware aircraft icons:** replace the fixed ✈️ emoji with an SVG plane icon drawn to point at the decoded track (the emoji is drawn pointing ~45° north-east, so rotating it by the heading is visually off by 45°). Possibly vary the icon by aircraft category.
-- Demodulator throughput: the Python block can fall behind live 2 Msps (`O` overflow markers in the log); vectorise further or move the hot loop to C++/numba, and consider 2.4 Msps.
-- Benchmarking against Flightradar24: aircraft count within radius, position latency, route-match rate.
 
