@@ -221,11 +221,11 @@
     return L.divIcon({
       className: 'plane-marker',
       html: `
-        <div class="relative flex flex-col items-center justify-center -translate-x-1/2 -translate-y-1/2 group">
+        <div class="relative flex items-center justify-center w-9 h-9 group">
           <!-- Selection Pulsing Ring Halo -->
           ${
             isSelected
-              ? `<div class="absolute -inset-3 rounded-full border-2 border-[#168AAD] bg-[#168AAD]/15 animate-pulse pointer-events-none"></div>`
+              ? `<div class="absolute inset-0 rounded-full border-2 border-[#168AAD] bg-[#168AAD]/15 animate-pulse pointer-events-none"></div>`
               : ''
           }
           
@@ -247,7 +247,7 @@
           </div>
 
           <!-- Callsign & Altitude Compact Pill Badge -->
-          <div class="mt-0.5 flex items-center gap-1.5 px-2 py-0.5 rounded-md shadow-xs border ${isSelected ? 'border-[#168AAD] bg-[#F0F8FA]' : 'border-[#E3EAF0] bg-white/95'} backdrop-blur-md pointer-events-none select-none transition-all">
+          <div class="absolute top-full left-1/2 -translate-x-1/2 mt-0.5 flex items-center gap-1.5 px-2 py-0.5 rounded-md shadow-xs border whitespace-nowrap ${isSelected ? 'border-[#168AAD] bg-[#F0F8FA]' : 'border-[#E3EAF0] bg-white/95'} backdrop-blur-md pointer-events-none select-none transition-all">
             <span class="text-xs font-sans font-semibold ${isSelected ? 'text-[#168AAD]' : 'text-[#263747]'}">
               ${plane.callsign}
             </span>
@@ -262,8 +262,8 @@
           </div>
         </div>
       `,
-      iconSize: [44, 44],
-      iconAnchor: [22, 22],
+      iconSize: [36, 36],
+      iconAnchor: [18, 18],
     });
   }
 
